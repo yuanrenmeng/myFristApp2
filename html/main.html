@@ -1,0 +1,395 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>实现按分类展示商品列表</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <style>
+        #header{
+            width: 100%;
+            height:64px;
+            background-color: #e1017e;
+            position: relative;
+        }
+        #header .header_left{
+            position: absolute;
+            bottom: 0;
+            left:0;
+            width:33.3%;
+            height:64px;
+            z-index: 999;
+        }
+        .header_left .arrow{
+            width:13px;
+            height: 8px;
+            display: inline-block;
+            background:url("../image/arrow_down.png") no-repeat;
+            background-size: 13px 8px;
+            background-position: center center;
+            position: absolute;
+            top: 26px;
+            left: 10px;
+        }
+        .header_left .city{
+            width: 100%;
+            height: 14px;
+            padding-left: 28px;
+            padding-top: 24px;
+            line-height:14px;
+            font-size:14px;
+            color: #fff;
+        }
+        .header_center{
+            width: 100%;
+            height: 20px;
+            background:url("../image/title_main.png") no-repeat;
+            background-size:auto 20px ;
+            background-position: center center;
+            position: relative;
+            top:22px;
+            left:0;
+        }
+        .header_right{
+            width: 33.3%;
+            height: 64px;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        .header_right_img{
+            width: 25px;
+            height: 25px;
+            background: url("../image/membercenter.png");
+            background-size:25px 25px ;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+
+        }
+        nav{
+            width: 100%;
+            height:40px;
+            background-color: #e1017e;
+        }
+        nav ul{
+            width: 100%;
+            height: 100%;
+        }
+        nav ul li{
+            float: left;
+            line-height:40px;
+            width: 20%;
+            height: 100%;
+            text-align: center;
+            font-size:14px;
+            color: #ccc;
+        }
+        nav ul .currt{
+            color:#fff;
+            font-size:16px;
+        }
+
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="header_left">
+            <span class="arrow" id="arrow"></span>
+            <div class="city"></div>
+        </div>
+        <div class="header_center"></div>
+        <div class="header_right">
+            <div class="header_right_img" onclick="login()"></div>
+        </div>
+    </header>
+    <nav id="nav">
+        <ul>
+            <li class="currt">水果</li>
+            <li>食材</li>
+            <li>零食</li>
+            <li>牛奶</li>
+            <li>蔬菜</li>
+        </ul>
+    </nav>
+
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script src="../script/jquery-1.12.3.min.js"></script>
+<script type="text/javascript" src = 'http://webapi.amap.com/maps?v=1.4.0&key=177b483773d2e825f155167cb176fc1a'></script>
+<script type="text/javascript" src = 'http://webapi.amap.com/maps?v=1.4.0&key=5e3a6c9c038b38094939a91f6eaf90ed'></script>
+<script type="text/javascript">
+apiready = function(){
+      // 初始化事件监听
+      initEventListenner();
+      // 获取当前的位置信息
+      initLocation();
+
+      var header = document.querySelector('#header');
+      var nav = document.querySelector('#nav');
+      //获取所有分配菜单
+      menus = document.querySelector('#nav li');
+      // 实现沉浸式状态栏效果
+      $api.fixStatusBar(header);
+      // 计算header和nav元素的高度
+      headerH = $api.offset(header).h;
+      navH = $api.offset(nav).h;
+      //从缓存中取上一次打开的城市
+      var currentCity = $api.getStorage(currentCity);
+      //判断是否存在，不存在即打开城市选择页面
+      if(currentCity == ''){
+        openCiytyiframe();
+        return;
+      }
+      //更新页面上显示的城市名称
+       updateCityName(currentCity.name);
+
+      //打开首页所有iframe
+      openFrames();
+};
+
+var city,menus;
+    //更新城市名称方法
+function updateCityName(cityName_){
+      city = $(".city");
+      city.html(cityName_);
+    }
+    //改变箭头状态
+function setArrow(){
+      if( $('.arrow').css({transform:'rotate(0deg)'}){
+         $('.arrow').css({transform:'rotate(180deg)'});
+      })
+}
+    //初始化
+function initEventListenner(){
+      //监听城市切换事件（自定义，由cityselector_frame页面传过来）
+      api.addEventListener({
+        name: 'changCity'
+       }, function(ret, err){
+         if(ret){
+           //更新城市名称
+           updateCityName(ret.value.currentCity.name);
+           //更新箭头
+           setArrow();
+           //打开首页所有iframe
+           openFrames();
+         }
+      });
+      //拦截back返回键，退出app
+      api.addEventListener({
+            name: 'keyback'
+          }, function(ret, err) {
+          api.confirm({
+              title: '是否退出APP',
+              // msg: 'testmsg',
+              buttons: ['确定', '取消']
+          }, function(ret, err) {
+              var index = ret.buttonIndex;
+              if(index == 1){
+                api.closeWidget({
+                    id: 'A6054402379586',
+                    retData: {
+                        name: 'closeWidget'
+                    },
+                    silent:true,
+                    animation: {
+                        type: 'flip',
+                        subType: 'from_bottom',
+                        duration: 500
+                    }
+                });
+              }
+          });
+        });
+
+    }
+    //获取当前位置
+function initLocation()}{
+      //加载高德地图模块
+        var aMap = api.require('aMap');
+         aMap.getLocation(function(ret, err){
+            if(ret.status){//获取定位成功
+              var startlon = ret.lon,//获取经纬度
+                  startLat = ret.lat;
+              aMap.getNameFromCoords({
+                  lon: startlon,//根据经纬度定位
+                  lat: startLat
+               }, function(ret, err) {
+                  if (ret.status) {
+                      // alert('您当前所在的城市是：'+ret.state+'-'+ret.city);
+                    //判断当前城市是否和上次打开城市一致，不一致则重新打开城市选择列表
+                    if(!city){
+                      return;
+                    }
+                    if(city.html()!==ret.city){
+                      openCiytyiframe();
+                    }
+
+                  }
+    }
+    //打开城市列表
+function openCiytyiframe(){
+      //设置箭头
+      setArrow();
+
+      // 根据UI架构设计（ui-architecture.xmind），打开城市选择Frame
+      api.openFrame({
+          name: 'cityselector_frame',
+          url: './cityselector_frame.html',
+          rect: {
+              x: 0,
+              y: headerH,
+              w: 'auto',
+              h: 'auto'
+          },
+          bounces: true,
+          bgColor: 'rgba(0,0,0,0.8)',
+      });
+
+}
+    // 打开商品列表FrameGroup和mini购物车Frame
+function openFrames(){
+      //设置 openFrameGroup中的iframes组
+      var iframes = [];
+      for(var i = 0;i<menus.length;i++){
+        iframes.push({
+          url:'./main_frame.html',
+          name:'main_frame_'+i,
+          pageParam:{  //页面参数，页面中可以通过api.pageParam获取
+            wareTypeIndex:i
+          },
+        })
+      }
+      //打开FrameGroup
+      api.openFrameGroup ({
+          name: 'group',
+          background: '#fff',
+          scrollEnabled: true,//能够左右滚动
+          rect: {
+               x: 0,
+               y: headerH+navH,
+               w: 'auto',
+               h: 'auto'
+          },
+          index: 0,//默认显示的第一个iframe
+          frames:iframes,
+          preload:iframes.length // 预加载所有Frame
+      }, function(ret, err){
+          if( ret ){
+            //更新菜单
+              changNavSelect(ret.index);
+          }
+      });
+
+}
+//更新菜单
+fucntion changNavSelect(index_){
+    menus.eq(index_).addClass('active').siblings().removeClass('active');
+}
+
+    // // 点击登录页面打开登录页面的方法
+    //   function login() {
+    //       api.openWin({
+    //           name: 'login',
+    //           url: './login.html',
+    //           pageParam: {name: 'pageparam'},
+    //           bounces: true
+    //       });
+    //   }
+    // //加载商品
+    // function loadingShop(cityID){
+    //     var cityID = cityID;
+    //   //获取商品分类列表
+    //     var param = {
+    //         fields: {},
+    //         where:	{},
+    //         // skip:	0,
+    //         // limit:	5
+    //       }
+    //     var params = $api.jsonToStr(param);
+    //     api.ajax({
+    //         url: 'http://d.apicloud.com/mcm/api/wareType?filter='+params,
+    //         method: 'get',
+    //         headers: {
+    //           "X-APICloud-AppId": "A6914327011091",
+    //           "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
+    //         }
+    //     },function(ret, err){
+    //         if (ret) {
+    //           var res = ret;
+    //           loadingShopOfIndex(0,res,cityID);//刚来的时候无论切换那个省份先加载第一个分类内容的数据
+    //           // 点击切换nav
+    //           $('nav li').each(function(i,el){
+    //             $(this).click(function(){
+    //               $(this).addClass('currt').siblings().removeClass('currt');
+    //               // alert( JSON.stringify( ret[i].id ) );//各类别ID
+    //               // alert( JSON.stringify( cityID ) );//城市ID
+    //               //  alert(JSON.stringify(ret[i].banner.url))
+    //               //把商品类别列表的banner广播出去，main_frame接收,动态修改banner图
+    //               loadingShopOfIndex(i,res,cityID);
+    //               // api.addEventListener({
+    //               //     name: 'more'
+    //               //  }, function(ret, err){
+    //               //   //ret = ret.value.prodoct_length =商品的长度
+    //               //   loadingShopOfIndex(i, res,cityID);
+    //               //   // alert(JSON.stringify(ret.value.prodoct_length))
+    //               // });
+    //             })
+    //          })
+    //
+    //         } else {
+    //             alert( JSON.stringify( err ) );
+    //         }
+    //     });
+    //
+    // }
+    //
+    // function loadingShopOfIndex(index,result,cityID){//通过点击的li获取不同的商品信息
+    //   $api.setStorage('bannerImg',result);
+    //   api.sendEvent({
+    //       name: 'bannerImg',
+    //       extra: {
+    //           bannerImg: result[index].banner.url,
+    //       }
+    //   });
+    //   //获取商品列表
+    //   var param2 = {
+    //       fields: {},
+    //       where: {
+    //         supportAreaId:cityID,//城市ID
+    //         wareTypeId: result[index].id,//商品分类列表id
+    //       },
+    //       skip:	1,
+    //       limit: 2
+    //   }
+    //   var params2 = $api.jsonToStr(param2);
+    //   api.ajax({
+    //       url: 'http://d.apicloud.com/mcm/api/ware?filter='+params2,
+    //       method: 'get',
+    //       headers: {
+    //         "X-APICloud-AppId":	"A6914327011091",
+    //         "X-APICloud-AppKey":	"8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
+    //         }
+    //    },function(ret, err){
+    //       if (ret) {
+    //         alert( JSON.stringify( ret ) );
+    //         $api.setStorage('shopInfo',ret);
+    //         //定义广播事件，所有window窗口都能通过addEventListener监听，ret.value 获取
+    //         api.sendEvent({
+    //             name: 'showShopInfo',
+    //             extra: {
+    //                 shopInfo: ret
+    //             }
+    //         });
+    //       } else {
+    //           alert( JSON.stringify( err ) );
+    //       }
+    //   });
+    //
+    // }
+
+
+
+</script>
+</html>

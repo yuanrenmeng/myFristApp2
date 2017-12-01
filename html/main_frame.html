@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>实现商品列表展示</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <style>
+        .content{
+            width: 100%;
+            height:130px;
+            padding:4px 10px 0px 10px;
+            box-sizing: border-box;
+        }
+        .banner{
+            width: 100%;
+            height: 100%;
+        }
+        .banner img{
+            width: 100%;
+            height: 100%;
+        }
+        .prodoct{
+            width: 100%;
+        }
+        .prodoct ul li{
+            width: 100%;
+            height:140px;
+            padding:20px 0;
+            position: relative;
+            border-bottom: 1px solid #ccc;
+        }
+        .pic{
+            width: 100px;
+            /*height: 100%;*/
+            position: absolute;
+            top: 40px;
+            left: 0;
+        }
+        .pic img{
+            width: 100%;
+            height: 100px;
+        }
+        .prodoct_msg{
+            position: absolute;
+            top: 40px;
+            left: 120px;
+        }
+        .prodoct_msg h2{
+            font-size:16px;
+            color: #555;
+            font-weight: normal;
+        }
+        .prodoct_msg p{
+            font-size:14px;
+            color: #888;
+            margin:4px 0;
+        }
+        .prodoct_msg span:nth-of-type(1){
+            font-size:14px ;
+            color: #cf005b;
+        }
+        .prodoct_msg span:nth-of-type(2){
+            font-size:12px ;
+        }
+        .prodoct_msg i,del,span:nth-of-type(2){
+            color: #cfcfcf;
+        }
+        .prodoct_msg i,del{
+            font-size:14px;
+        }
+        .more{
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            bottom:40px;
+            right: 0;
+        }
+        .more img{
+            width: 100%;
+            height: 100%;
+        }
+        .loading{
+            margin-top:10px;
+        }
+        .loading p{
+            font-size:16px;
+            color: #888888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+   <div class="content">
+       <div class="banner">
+           <img src="../image/default_rect.png" alt="">
+       </div>
+       <div class="prodoct">
+           <ul>
+               <!-- <li>
+                   <div class="pic">
+                       <img src="../image/default_square.png" alt="">
+                   </div>
+                   <div class="prodoct_msg">
+                       <h2>泰国龙眼</h2>
+                       <p>肉肉的，甜甜的哦~~~</p>
+                       <span>&yen;18.9</span>
+                       <span>/4个</span><br>
+                       <i>超市：<del>39.9元</del></i>
+                   </div>
+                   <div class="more">
+                       <img src="../image/add.png" alt="">
+                   </div>
+               </li>
+               <li>
+                   <div class="pic">
+                       <img src="../image/default_square.png" alt="">
+                   </div>
+                   <div class="prodoct_msg">
+                       <h2>泰国龙眼</h2>
+                       <p>肉肉的，甜甜的哦~~~</p>
+                       <span>&yen;18.9</span>
+                       <span>/4个</span><br>
+                       <i>超市：<del>39.9元</del></i>
+                   </div>
+                   <div class="more">
+                       <img src="../image/add.png" alt="">
+                   </div>
+               </li>
+               <li>
+                   <div class="pic">
+                       <img src="../image/default_square.png" alt="">
+                   </div>
+                   <div class="prodoct_msg">
+                       <h2>泰国龙眼</h2>
+                       <p>肉肉的，甜甜的哦~~~</p>
+                       <span>&yen;18.9</span>
+                       <span>/4个</span><br>
+                       <i>超市：<del>39.9元</del></i>
+                   </div>
+                   <div class="more">
+                       <img src="../image/add.png" alt="">
+                   </div>
+               </li> -->
+           </ul>
+       </div>
+        <div class="loading">
+            <p>上拉显示更多</p>
+        </div>
+   </div>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script src="../script/jquery-1.12.3.min.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+      api.openFrame({
+          name: 'minicart_frame',
+          url: './minicart_frame.html',
+          rect: {
+              x: 0,
+              y:420,
+              w: 36,
+              h: 34
+          },
+          pageParam: {name: 'pageparam'},
+          bounces: true
+      });
+          //接收main页面的商品列表
+          api.addEventListener({
+              name: 'showShopInfo'
+           }, function(ret, err){
+             alert(JSON.stringify(ret))
+              if( ret ){
+                   $('.prodoct ul').children().remove();
+                   var len = ret.value.shopInfo.length;
+                   var view = '';
+                   for(var i = 0;i<len;i++){
+                     view +='<li>'+
+                         '<div class="pic">'+
+                             '<img src="'+ret.value.shopInfo[i].thumbnail.url+'">'+
+                         '</div>'+
+                         '<div class="prodoct_msg">'+
+                             '<h2>'+ret.value.shopInfo[i].name+'</h2>'+
+                             '<p>'+ret.value.shopInfo[i].description+'</p>'+
+                             '<span>'+ret.value.shopInfo[i].price+'</span>'+
+                             '<span>'+ret.value.shopInfo[i].unit+'</span><br>'+
+                             '<i>超市：<del>'+ret.value.shopInfo[i].originPrice+'</del></i>'+
+                         '</div>'+
+                         '<div class="more">'+
+                             ' <img src="../image/add.png" alt="">'+
+                         '</div>'+
+                       '</li>';
+                   }
+                   $('.prodoct ul').append(view);
+                   lg =  $('.prodoct ul li').length;//获取已经加载的商品的长度
+                   $api.setStorage('prodoct_length',lg);//保存起来给监听scrolltobottom的事件
+              }else{
+                   alert( JSON.stringify( err ) );
+              }
+          });
+          //接收main页面的商品分类列表
+          api.addEventListener({
+              name: 'bannerImg'
+          }, function(ret, err){
+              if( ret ){
+                  $('.banner img').attr('src',ret.value.bannerImg)
+              }else{
+                   alert( JSON.stringify( err ) );
+              }
+          });
+
+    };
+</script>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>实现城市列表展示</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <style>
+        html,body{
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            text-align: center;
+        }
+        .title{
+            margin-top:100px;
+            padding-bottom:10px;
+            border-bottom: 1px solid #c8026f;
+            color: #fff;
+            font-size:18px;
+        }
+        .city_list{
+            width: 100%;
+            height:100%;
+        }
+        .city_list ul li{
+            color: #fff;
+            width: 100%;
+            font-size:22px;
+            padding-top:30px;
+        }
+    </style>
+</head>
+<body>
+   <div class="title">选择服务的地区</div>
+<div class="city_list">
+    <ul>
+        <!-- <li>北京</li>
+        <li>天津</li>
+        <li>上海</li> -->
+    </ul>
+</div>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script src="../script/jquery-1.12.3.min.js"></script>
+<script type="text/javascript">
+    var cityList;
+    apiready = function(){
+        var param = {
+          fields: {},
+          where:	{},
+          skip:	0
+        }
+        var params = $api.jsonToStr(param);
+        api.ajax({
+            url: 'http://d.apicloud.com/mcm/api/supportArea?filter='+params,
+            method: 'get',
+            headers: {
+              "X-APICloud-AppId": "A6914327011091",
+              "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
+              }
+         },function(ret, err){
+            if (ret) {
+                // alert( JSON.stringify( ret ) );
+              cityList = ret;
+              var list = $('.city_list ul')
+              var html = '';
+              for(var i = 0;i<cityList.length;i++){
+                if(cityList[i].name){
+                  html +='<li onclick="changCitys('+i+')">'+cityList[i].name+'</li>'
+                }
+              }
+              list.append(html);
+
+            } else {
+                alert( JSON.stringify( err ) );
+            }
+        });
+    };
+
+    // 这个方法要写在apiready外面  不然会显示未定义
+    function changCitys(index){
+        //存储数据
+      $api.setStorage('currentCity',cityList[index]);
+      //定义广播事件，所有window窗口都能通过addEventListener监听，ret.value 获取。
+      //把获取的点击城市广播出去再main.html页面获取到
+      api.sendEvent({
+          name: 'changCity',
+          extra: {
+              currentCity: cityList[index]
+          }
+      });
+      //设置本页面隐藏
+      api.setFrameAttr({
+          hidden:true
+        });
+    }
+</script>
+</html>

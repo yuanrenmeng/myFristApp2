@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <title>个人中心内容展示页</title>
+    <style>
+        .header{
+            background-color: #e3007f;
+            height: 150px;
+            text-align: center;
+            padding-top:8px;
+        }
+        .header .icon-panel{
+            width: 100%;
+            height: 86px;
+            text-align: center;
+        }
+        .icon-panel .icon{
+            display: inline-block;
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            border: 3px solid #b10063;
+            box-sizing: border-box;
+            background: url("../image/default_square.png") no-repeat center center;
+            background-size:100% 100% ;
+        }
+        .header .username{
+            width: 100%;
+            height:34px;
+            line-height: 34px;
+            color: #fff;
+        }
+        .header .account{
+            width: 100%;
+            color: #fff;
+            font-size:12px;
+        }
+        section .option{
+            height: 60px;
+            line-height:60px;
+            position: relative;
+            border-bottom: 1px solid #ddd;
+        }
+        .option .icon_myorder{
+            background: url('../image/img_item_myorder.png') no-repeat center center;
+        }
+        .option .icon_account{
+            background: url('../image/icon_user_info_accounts.png') no-repeat center center;
+        }
+        .option .icon_coupon{
+            background: url('../image/icon_user_coupon.png') no-repeat center center;
+        }
+        .option .icon_address{
+            background: url('../image/item_user_address.png') no-repeat center center;
+        }
+        .option .icon{
+            width: 40px;
+            height:60px;
+            -webkit-background-size: 30px 30px;
+            background-size:auto 20px ;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .option .title{
+            width:100%;
+            height: 60px;
+            padding-left:40px;
+            font-size:14px;
+            color: #444;
+        }
+        .option .more{
+            background: url("../image/arrow_right.png") no-repeat right center;
+            background-size: 16px 24px;
+            position: absolute;
+            right: 10px;
+            top: 0;
+            padding-right: 26px;
+            font-size:12px;
+            color:#888
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="icon-panel">
+            <div class="icon" id="icon"></div>
+        </div>
+        <div class="username" id="username">brode</div>
+        <div class="account">积分：<span>0</span> | 余额：<span>&yen;0</span></div>
+    </div>
+    <section>
+        <div class="option">
+            <div class="icon_myorder icon"></div>
+            <div class="title">我的订单</div>
+            <div class="more">查看所有订单详情</div>
+        </div>
+    </section>
+    <section>
+        <div class="option">
+            <div class="icon_account icon"></div>
+            <div class="title">我的账户</div>
+            <div class="more">充值有礼</div>
+        </div>
+    </section>
+    <section>
+        <div class="option">
+            <div class="icon_coupon icon"></div>
+            <div class="title">优惠券</div>
+            <div class="more">查看我的优惠券</div>
+        </div>
+    </section>
+    <section>
+        <div class="option">
+            <div class="icon_address icon"></div>
+            <div class="title">收货地址</div>
+            <div class="more">管理我的收获地址</div>
+        </div>
+    </section>
+</body>
+</html>

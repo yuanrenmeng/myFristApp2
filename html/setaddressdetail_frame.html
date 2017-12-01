@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>设置详细地址frame</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <style>   
+        html,body{
+            height: 100%;
+            background-color: #eee;
+        }
+        #header {
+            width: 100%;
+            height: 60px;
+            background-color: #fff;
+            padding:16px 20px;
+            box-sizing: border-box;
+            margin-bottom: 2px;
+        }
+        #header input{
+            width: 78%;
+            height: 28px;
+            background-color: #e8e8e8;
+            border-radius:20px;
+            outline: none;
+            font-size:14px;
+            padding-left:10px;
+            box-sizing: border-box;
+        }
+        #header .del{
+            width: 20%;
+            height: 28px;
+            line-height: 28px;
+            display: inline-block;
+            border: 1px solid #888;
+            box-sizing: border-box;
+            border-radius:20px ;
+            text-align: center;
+        }
+        #list{
+            width: 100%;
+            height:auto;
+            background-color: #fff;
+        }
+        #list .option{
+            width: 100%;
+            height: 60px;
+            padding: 0 20px ;
+            position: relative;
+        }
+        .option .icon{
+            position: absolute;
+            top: 20px;
+            left: 16px;
+            width:20px;
+            height: 20px;
+            background: url(../image/icon_address_none.png) no-repeat center center;
+            background-size: auto 20px;
+        }
+        .option .info{
+            width: 100%;
+            height: 100%;
+            padding-left:20px ;
+        }
+        .option .info .top{
+            padding-top:14px;
+        }
+        .option .info .bottom{
+            font-size:12px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="header">
+        <input type="text" placeholder="小区/写字楼">
+        <div class="del">清空</div>
+    </header>
+    <section id="list">
+        <div class="option">
+            <div class="icon"></div>
+            <div class="info">
+                <div class="top">门头沟</div>
+                <div class="bottom">正在获取.....</div>
+            </div>
+        </div>
+    </section>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+apiready = function() {
+};
+</script>
+
+</html>
