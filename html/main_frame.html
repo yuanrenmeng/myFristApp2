@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -71,15 +72,45 @@
             font-size:14px;
         }
         .more{
-            width: 20px;
-            height: 20px;
-            position: absolute;
-            bottom:40px;
-            right: 0;
+          position: absolute;
+          width: 96px;
+          height: 20px;
+          right: 8px;
+          bottom:0px;
         }
-        .more img{
-            width: 100%;
-            height: 100%;
+        .more .panel{
+          display: none;
+          height: 20px;
+        }
+        .more .panel .minus{
+          position: absolute;
+          bottom: 40px;
+          left: 0px;
+          width: 20px;
+          height: 20px;
+          z-index: 2;
+          }
+        .more .count{
+          position: absolute;
+          bottom: 40px;
+          right: 24px;
+          width: 48px;
+          height: 22px;
+          text-align: center;
+          line-height: 22px;
+          color: #444;
+          font-size: 12px;
+          background-image: url(../image/count.png);
+          background-repeat: no-repeat;
+          background-size: 48px 22px;
+          }
+        .more .add{
+          position: absolute;
+          bottom: 40px;
+          right: 0px;
+          width: 20px;
+          height: 20px;
+          z-index: 2;
         }
         .loading{
             margin-top:10px;
@@ -140,9 +171,13 @@
                        <i>超市：<del>39.9元</del></i>
                    </div>
                    <div class="more">
-                       <img src="../image/add.png" alt="">
+                     <div class="panel">
+                       <img class="minus" src="../image/minus.png" onclick="fnDel()">
+                       <div class="count">0</div>
+                     </div>
+                      <img class="add" src="../image/add.png" alt="" onclick = "fnAdds()">
                    </div>
-               </li> -->
+               </li>-->
            </ul>
        </div>
         <div class="loading">
@@ -152,64 +187,169 @@
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
+<script type="text/javascript" src="../script/comen.js"></script>
+<script src="https://ciphertrick.com/demo/jquerysession/js/jquerysession.js"></script>
 <script type="text/javascript">
-    apiready = function(){
-      api.openFrame({
-          name: 'minicart_frame',
-          url: './minicart_frame.html',
-          rect: {
-              x: 0,
-              y:420,
-              w: 36,
-              h: 34
-          },
-          pageParam: {name: 'pageparam'},
-          bounces: true
-      });
-          //接收main页面的商品列表
-          api.addEventListener({
-              name: 'showShopInfo'
-           }, function(ret, err){
-             alert(JSON.stringify(ret))
-              if( ret ){
-                   $('.prodoct ul').children().remove();
-                   var len = ret.value.shopInfo.length;
-                   var view = '';
-                   for(var i = 0;i<len;i++){
-                     view +='<li>'+
-                         '<div class="pic">'+
-                             '<img src="'+ret.value.shopInfo[i].thumbnail.url+'">'+
-                         '</div>'+
-                         '<div class="prodoct_msg">'+
-                             '<h2>'+ret.value.shopInfo[i].name+'</h2>'+
-                             '<p>'+ret.value.shopInfo[i].description+'</p>'+
-                             '<span>'+ret.value.shopInfo[i].price+'</span>'+
-                             '<span>'+ret.value.shopInfo[i].unit+'</span><br>'+
-                             '<i>超市：<del>'+ret.value.shopInfo[i].originPrice+'</del></i>'+
-                         '</div>'+
-                         '<div class="more">'+
-                             ' <img src="../image/add.png" alt="">'+
-                         '</div>'+
-                       '</li>';
-                   }
-                   $('.prodoct ul').append(view);
-                   lg =  $('.prodoct ul li').length;//获取已经加载的商品的长度
-                   $api.setStorage('prodoct_length',lg);//保存起来给监听scrolltobottom的事件
-              }else{
-                   alert( JSON.stringify( err ) );
-              }
-          });
-          //接收main页面的商品分类列表
-          api.addEventListener({
-              name: 'bannerImg'
-          }, function(ret, err){
-              if( ret ){
-                  $('.banner img').attr('src',ret.value.bannerImg)
-              }else{
-                   alert( JSON.stringify( err ) );
-              }
-          });
+  apiready = function(){
+        init();//初始化数据
+        fnEventListenter();//初始化默认监听事件
+        initRefresh();//下拉刷新
+        updateBanner();//更新banner图片
+        fnGetWareList(false);  // 获取商品列表
+  };
 
-    };
+var currentCity, wareTypeList, skip = 0,Limit = 3;
+
+function init(){
+    currentCity = $api.getStorage('currentCity');
+    wareTypeList = $api.getStorage('wareTypeList');
+}
+
+function fnEventListenter(){
+    //监听滚动到底部
+    api.addEventListener({
+        name: 'scrolltobottom',
+        extra:{
+            threshold:0            //设置距离底部多少距离时触发，默认值为0，数字类型
+          }
+    }, function(ret, err){
+          // alert('已滚动到底部');
+             fnGetWareList(true);//加载更多商品，用true和false来区别是加载更多还是上拉刷新/刚开始默认显示商品
+    });
+
+    //监听城市切换(自定义事件)
+    api.addEventListener({
+        name: 'changCity'
+     }, function(ret, err){
+        if( ret.value ){
+            currentCity = ret.value.currentCity;//更新当前城市
+            fnGetWareList(false);//更新商品列表（false更新的是刚开始显示的商品）
+        }else{
+             alert( JSON.stringify( err ) );
+        }
+    });
+}
+
+//实现下拉刷新
+function initRefresh(){
+  api.setRefreshHeaderInfo({
+    visible: true,
+    loadingImg: 'widget://image/refresh.png',
+    bgColor: '#ccc',
+    textColor: '#fff',
+    textDown: '下拉刷新...',
+    textUp: '松开刷新...',
+    showTime: true
+ }, function(ret, err){
+    fnGetWareList(false);//更新商品列表
+ });
+}
+
+// 获取商品列表，通过loadMore_参数区分是首次加载（false）还是上拉加载更多(true)
+function fnGetWareList(loadMore_){
+    if(loadMore_){ //loadMore_是true上拉加载的时候就出现
+      // 显示加载状态对话框
+       api.showProgress({
+           style: 'default',
+           animationType: 'fade',
+           title: '努力加载中...',
+           text: '请稍后...',
+           modal: false
+       });
+    }
+    if(loadMore_){//上拉加载更多
+      //分页
+      skip+=Limit;
+      // alert(skip)
+    }else{//初次进入和上拉刷新
+      skip = 0;
+    }
+    // 根据城市和商品分类获得相应的商品列表
+    var params = {
+      fields: {},
+      where: {
+        supportAreaId:	currentCity.id,
+        wareTypeId: wareTypeList[api.pageParam.wareTypeIndex].id,//通过main页面openFrameGroup中点击每一个列表传递的参数
+      },
+      skip:	skip,
+      limit:Limit
+    }
+    params = $api.jsonToStr(params);
+    api.ajax({
+        url: 'http://d.apicloud.com/mcm/api/ware?filter='+params,
+        method: 'get',
+        headers: {
+          "X-APICloud-AppId": "A6921544633372",
+          "X-APICloud-AppKey": "2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476"
+          }
+    },function(ret, err){
+        if (ret) {
+            api.refreshHeaderLoadDone();//有数据了让刷新消失
+            var view ='';
+            for(var i = 0;i<ret.length;i++){
+              // console.log(ret[i].id);
+              var dataId = ret[i].id;
+              view += '<li>'+
+                  '<div class="pic">'+
+                      '<img src="'+ret[i].thumbnail.url+'" alt="">'+
+                  '</div>'+
+                  '<div class="prodoct_msg">'+
+                      '<h2>'+ret[i].name+'</h2>'+
+                      '<p>'+ret[i].description+'</p>'+
+                      '<span class="price">&yen;'+ret[i].price+'</span>'+
+                      '<span>/'+ret[i].unit+'</span><br>'+
+                      '<i>超市：<del>'+ret[i].originPrice+'</del></i>'+
+                  '</div>'+
+                  '<div class="more">'+
+                      '<div class="panel">'+
+                        '<img class="minus" src="../image/minus.png" onclick=fnMinus("'+ret[i].id+'")>'+
+                        '<div class="count" id="'+ret[i].id+'">'+0+'</div>'+
+                      '</div>'+
+                      '<img class="add" src="../image/add.png" onclick=fnAdd("'+ret[i].id+'")>'+
+                  '</div>'+
+              '</li>'
+            }
+            if(loadMore_){
+              $('.prodoct ul').append(view);
+              if(ret.length<Limit){
+                $('.loading p').html('没有更多了！')
+              }
+            }else{
+              $('.prodoct ul').html(view);
+            }
+          //  api.parseTapmode();
+        } else {
+
+            api.toast({
+                msg: '加载数据失败',
+                duration: 2000,
+                location: 'bottom'
+            });
+        }
+        // 隐藏加载状态对话框
+        api.hideProgress();
+    });
+
+}
+
+//更新banner图
+function updateBanner(){
+    var wareTypeList = $api.getStorage('wareTypeList');
+    api.imageCache({
+        url: wareTypeList[api.pageParam.wareTypeIndex].banner.url
+    }, function(ret, err) {
+          $('.banner img').attr('src',ret.url);
+    });
+}
+
+// 减
+function fnMinus(data){
+
+}
+//加
+function fnAdd(data){
+
+}
+
 </script>
 </html>

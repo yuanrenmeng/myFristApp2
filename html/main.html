@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -32,6 +33,11 @@
             top: 26px;
             left: 10px;
         }
+        .header_left .arrow.active{
+           transform: rotate(180deg);
+        }
+
+
         .header_left .city{
             width: 100%;
             height: 14px;
@@ -95,22 +101,22 @@
 </head>
 <body>
     <header id="header">
-        <div class="header_left">
+        <div class="header_left" onclick="openCiytyiframe()">
             <span class="arrow" id="arrow"></span>
             <div class="city"></div>
         </div>
         <div class="header_center"></div>
         <div class="header_right">
-            <div class="header_right_img" onclick="login()"></div>
+            <div class="header_right_img" onclick="openPersonFrame()"></div>
         </div>
     </header>
     <nav id="nav">
         <ul>
-            <li class="currt">水果</li>
-            <li>食材</li>
-            <li>零食</li>
-            <li>牛奶</li>
-            <li>蔬菜</li>
+            <li class="currt" onclick='clickNav(0)'>水果</li>
+            <li onclick='clickNav(1)'>食材</li>
+            <li onclick='clickNav(2)'>零食</li>
+            <li onclick='clickNav(3)'>牛奶</li>
+            <li onclick='clickNav(4)'>蔬菜</li>
         </ul>
     </nav>
 
@@ -121,6 +127,8 @@
 <script type="text/javascript" src = 'http://webapi.amap.com/maps?v=1.4.0&key=5e3a6c9c038b38094939a91f6eaf90ed'></script>
 <script type="text/javascript">
 apiready = function(){
+      // $api.clearStorage();
+
       // 初始化事件监听
       initEventListenner();
       // 获取当前的位置信息
@@ -129,16 +137,18 @@ apiready = function(){
       var header = document.querySelector('#header');
       var nav = document.querySelector('#nav');
       //获取所有分配菜单
-      menus = document.querySelector('#nav li');
+      menus =$('#nav ul li');
       // 实现沉浸式状态栏效果
       $api.fixStatusBar(header);
       // 计算header和nav元素的高度
       headerH = $api.offset(header).h;
       navH = $api.offset(nav).h;
+      $api.setStorage('headerH', headerH);
+
       //从缓存中取上一次打开的城市
-      var currentCity = $api.getStorage(currentCity);
+      var currentCity = $api.getStorage('currentCity');
       //判断是否存在，不存在即打开城市选择页面
-      if(currentCity == ''){
+      if(!currentCity){ //不存在
         openCiytyiframe();
         return;
       }
@@ -147,111 +157,121 @@ apiready = function(){
 
       //打开首页所有iframe
       openFrames();
+
+      loadingShop();
+
 };
 
 var city,menus;
-    //更新城市名称方法
+//初始化
+function initEventListenner(){
+  //监听城市切换事件（自定义，由cityselector_frame页面传过来）
+  api.addEventListener({
+    name: 'changCity'
+   }, function(ret, err){
+     if(ret){
+       //更新城市名称
+       updateCityName(ret.value.currentCity.name);
+       //改变箭头状态
+       restArrow();
+       //打开首页所有iframe
+       openFrames();
+     }
+  });
+  //拦截back返回键，退出app
+  api.addEventListener({
+        name: 'keyback'
+      }, function(ret, err) {
+      api.confirm({
+          title: '是否退出APP',
+          // msg: 'testmsg',
+          buttons: ['确定', '取消']
+      }, function(ret, err) {
+          var index = ret.buttonIndex;
+          if(index == 1){
+            api.closeWidget({
+                id: 'A6054402379586',
+                retData: {
+                    name: 'closeWidget'
+                },
+                silent:true,
+                animation: {
+                    type: 'flip',
+                    subType: 'from_bottom',
+                    duration: 500
+                }
+            });
+          }
+      });
+    });
+
+}
+//获取当前位置
+function initLocation(){
+  //加载高德地图模块
+  var aMap = api.require('aMap');
+   aMap.getLocation(function(ret, err){
+      if(ret.status){//获取定位成功
+        var startlon = ret.lon,//获取经纬度
+            startLat = ret.lat;
+        aMap.getNameFromCoords({
+            lon: 116.40,//startlon/startLat根据经纬度定位
+            lat: 39.90
+           }, function(ret, err) {
+            if (ret.status) {
+                // alert('您当前所在的城市是：'+ret.state+'-'+ret.city);
+              //判断当前城市是否和上次打开城市一致，不一致则重新打开城市选择列表
+              if(!city){
+                return;
+              }
+              if(city.html()!==ret.city){
+                openCiytyiframe();
+              }
+            }
+          })
+      }
+  })
+}
+//打开城市列表
+function openCiytyiframe(){
+  //设置箭头
+  setArrow();
+  // 根据UI架构设计（ui-architecture.xmind），打开城市选择Frame
+  api.openFrame({
+      name: 'cityselector_frame',
+      url: './cityselector_frame.html',
+      rect: {
+          x: 0,
+          y: headerH,
+          w: 'auto',
+          h: 'auto'
+      },
+      bounces: true,
+      bgColor: 'rgba(0,0,0,0.8)',
+  });
+
+}
+//更新城市名称方法
 function updateCityName(cityName_){
       city = $(".city");
       city.html(cityName_);
-    }
-    //改变箭头状态
+}
+//设置箭头状态
 function setArrow(){
-      if( $('.arrow').css({transform:'rotate(0deg)'}){
-         $('.arrow').css({transform:'rotate(180deg)'});
-      })
+     if(!$('#arrow').hasClass('active')){
+          $('#arrow').addClass('active')
+      }
 }
-    //初始化
-function initEventListenner(){
-      //监听城市切换事件（自定义，由cityselector_frame页面传过来）
-      api.addEventListener({
-        name: 'changCity'
-       }, function(ret, err){
-         if(ret){
-           //更新城市名称
-           updateCityName(ret.value.currentCity.name);
-           //更新箭头
-           setArrow();
-           //打开首页所有iframe
-           openFrames();
-         }
-      });
-      //拦截back返回键，退出app
-      api.addEventListener({
-            name: 'keyback'
-          }, function(ret, err) {
-          api.confirm({
-              title: '是否退出APP',
-              // msg: 'testmsg',
-              buttons: ['确定', '取消']
-          }, function(ret, err) {
-              var index = ret.buttonIndex;
-              if(index == 1){
-                api.closeWidget({
-                    id: 'A6054402379586',
-                    retData: {
-                        name: 'closeWidget'
-                    },
-                    silent:true,
-                    animation: {
-                        type: 'flip',
-                        subType: 'from_bottom',
-                        duration: 500
-                    }
-                });
-              }
-          });
-        });
-
+function restArrow(){
+    if($('#arrow').hasClass('active')){
+        $('#arrow').removeClass('active');
     }
-    //获取当前位置
-function initLocation()}{
-      //加载高德地图模块
-        var aMap = api.require('aMap');
-         aMap.getLocation(function(ret, err){
-            if(ret.status){//获取定位成功
-              var startlon = ret.lon,//获取经纬度
-                  startLat = ret.lat;
-              aMap.getNameFromCoords({
-                  lon: startlon,//根据经纬度定位
-                  lat: startLat
-               }, function(ret, err) {
-                  if (ret.status) {
-                      // alert('您当前所在的城市是：'+ret.state+'-'+ret.city);
-                    //判断当前城市是否和上次打开城市一致，不一致则重新打开城市选择列表
-                    if(!city){
-                      return;
-                    }
-                    if(city.html()!==ret.city){
-                      openCiytyiframe();
-                    }
-
-                  }
-    }
-    //打开城市列表
-function openCiytyiframe(){
-      //设置箭头
-      setArrow();
-
-      // 根据UI架构设计（ui-architecture.xmind），打开城市选择Frame
-      api.openFrame({
-          name: 'cityselector_frame',
-          url: './cityselector_frame.html',
-          rect: {
-              x: 0,
-              y: headerH,
-              w: 'auto',
-              h: 'auto'
-          },
-          bounces: true,
-          bgColor: 'rgba(0,0,0,0.8)',
-      });
-
 }
-    // 打开商品列表FrameGroup和mini购物车Frame
+// 打开商品列表FrameGroup和mini购物车Frame
 function openFrames(){
       //设置 openFrameGroup中的iframes组
       var iframes = [];
+
       for(var i = 0;i<menus.length;i++){
         iframes.push({
           url:'./main_frame.html',
@@ -263,7 +283,7 @@ function openFrames(){
       }
       //打开FrameGroup
       api.openFrameGroup ({
-          name: 'group',
+          name: 'mainGroup',
           background: '#fff',
           scrollEnabled: true,//能够左右滚动
           rect: {
@@ -275,119 +295,99 @@ function openFrames(){
           index: 0,//默认显示的第一个iframe
           frames:iframes,
           preload:iframes.length // 预加载所有Frame
-      }, function(ret, err){
-          if( ret ){
-            //更新菜单
+       }, function(ret, err){
+        if( ret ){
+            // alert(JSON.stringify(ret))//ret = {"name":"main_frame_0","index":0} 对应每个菜单
+            //更新菜单选中状态
               changNavSelect(ret.index);
           }
       });
+      //打开mini购物车
+      api.openFrame({
+          name: 'minicart_frame',
+          url: './minicart_frame.html',
+          rect: {
+              x: 0,
+              y:api.winHeight - 85,
+              w:100,
+              h:"auto"
+          },
+          pageParam: {name: 'pageparam'},
+          reload: false,
+          bounces: false //弹动关闭
+      });
+      // 将mini购物车Frame放置在首页Window所有Frame的最上层
+      api.bringFrameToFront({
+          from: 'minicart_frame'
+      });
+}
+//更新菜单选中样式
+function changNavSelect(index_){
+    menus.eq(index_).addClass('currt').siblings().removeClass('currt');
+}
+//点击切换菜单
+function clickNav(index_){
+    //更新菜单选中样式
+    changNavSelect(index_);
+    //设置iframeGroup中当前显示的iframe
+    api.setFrameGroupIndex({
+    name: 'mainGroup',
+    index: index_,
+    scroll:true
+  });
+}
+//打开个人中心
+function openPersonFrame(){
+  //从缓存中取用户数据
+    var userInfo = $api.getStorage('userInfo');
+    // 判断当前用户是否登录了
+    if (userInfo && userInfo.id) {
+        // 登录成功，打开个人中心Window
+        api.openWin({
+            name: 'personalcenter',
+            url: './personalcenter.html',
+            pageParam: {
+                name: userInfo.id
+            }
+        });
+  }else{
+     // 没有登录，打开登录Window
+    api.openWin({
+        name: 'login',
+        url: './login.html',
+        pageParam: {name: 'pageparam'},
+        bounces: true
+    });
+  }
 
 }
-//更新菜单
-fucntion changNavSelect(index_){
-    menus.eq(index_).addClass('active').siblings().removeClass('active');
-}
 
-    // // 点击登录页面打开登录页面的方法
-    //   function login() {
-    //       api.openWin({
-    //           name: 'login',
-    //           url: './login.html',
-    //           pageParam: {name: 'pageparam'},
-    //           bounces: true
-    //       });
-    //   }
-    // //加载商品
-    // function loadingShop(cityID){
-    //     var cityID = cityID;
-    //   //获取商品分类列表
-    //     var param = {
-    //         fields: {},
-    //         where:	{},
-    //         // skip:	0,
-    //         // limit:	5
-    //       }
-    //     var params = $api.jsonToStr(param);
-    //     api.ajax({
-    //         url: 'http://d.apicloud.com/mcm/api/wareType?filter='+params,
-    //         method: 'get',
-    //         headers: {
-    //           "X-APICloud-AppId": "A6914327011091",
-    //           "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
-    //         }
-    //     },function(ret, err){
-    //         if (ret) {
-    //           var res = ret;
-    //           loadingShopOfIndex(0,res,cityID);//刚来的时候无论切换那个省份先加载第一个分类内容的数据
-    //           // 点击切换nav
-    //           $('nav li').each(function(i,el){
-    //             $(this).click(function(){
-    //               $(this).addClass('currt').siblings().removeClass('currt');
-    //               // alert( JSON.stringify( ret[i].id ) );//各类别ID
-    //               // alert( JSON.stringify( cityID ) );//城市ID
-    //               //  alert(JSON.stringify(ret[i].banner.url))
-    //               //把商品类别列表的banner广播出去，main_frame接收,动态修改banner图
-    //               loadingShopOfIndex(i,res,cityID);
-    //               // api.addEventListener({
-    //               //     name: 'more'
-    //               //  }, function(ret, err){
-    //               //   //ret = ret.value.prodoct_length =商品的长度
-    //               //   loadingShopOfIndex(i, res,cityID);
-    //               //   // alert(JSON.stringify(ret.value.prodoct_length))
-    //               // });
-    //             })
-    //          })
-    //
-    //         } else {
-    //             alert( JSON.stringify( err ) );
-    //         }
-    //     });
-    //
-    // }
-    //
-    // function loadingShopOfIndex(index,result,cityID){//通过点击的li获取不同的商品信息
-    //   $api.setStorage('bannerImg',result);
-    //   api.sendEvent({
-    //       name: 'bannerImg',
-    //       extra: {
-    //           bannerImg: result[index].banner.url,
-    //       }
-    //   });
-    //   //获取商品列表
-    //   var param2 = {
-    //       fields: {},
-    //       where: {
-    //         supportAreaId:cityID,//城市ID
-    //         wareTypeId: result[index].id,//商品分类列表id
-    //       },
-    //       skip:	1,
-    //       limit: 2
-    //   }
-    //   var params2 = $api.jsonToStr(param2);
-    //   api.ajax({
-    //       url: 'http://d.apicloud.com/mcm/api/ware?filter='+params2,
-    //       method: 'get',
-    //       headers: {
-    //         "X-APICloud-AppId":	"A6914327011091",
-    //         "X-APICloud-AppKey":	"8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
-    //         }
-    //    },function(ret, err){
-    //       if (ret) {
-    //         alert( JSON.stringify( ret ) );
-    //         $api.setStorage('shopInfo',ret);
-    //         //定义广播事件，所有window窗口都能通过addEventListener监听，ret.value 获取
-    //         api.sendEvent({
-    //             name: 'showShopInfo',
-    //             extra: {
-    //                 shopInfo: ret
-    //             }
-    //         });
-    //       } else {
-    //           alert( JSON.stringify( err ) );
-    //       }
-    //   });
-    //
-    // }
+//获取商品分类类别
+function loadingShop(){
+    var param = {
+        fields: {},
+        where:	{},
+        skip:	0,
+        limit:	5
+      }
+    var params = $api.jsonToStr(param);
+    api.ajax({
+        url: 'http://d.apicloud.com/mcm/api/wareType?filter='+params,
+        method: 'get',
+        headers: {
+          "X-APICloud-AppId": "A6914327011091",
+          "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
+        }
+    },function(ret, err){
+        if (ret) {
+          // alert(JSON.stringify(ret)) //五个商品列表 数组对象
+          $api.setStorage('wareTypeList', ret);//获取商品分类成功保存在缓存中
+        } else {
+            alert( JSON.stringify( err ) );
+        }
+    });
+
+}
 
 
 
