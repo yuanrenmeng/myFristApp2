@@ -11,9 +11,11 @@
 
 </body>
 <script type="text/javascript" src="./script/api.js"></script>
+<script type="text/javascript" src="./script/db.js"></script>
 <script type="text/javascript">
         apiready = function(){
-
+          // 初始化本地数据库及应用需要的相关表结构
+            initDatabase();
             // 1. 根据UI架构设计（ui-architecture.xmind），打开首页Window
             //2. 这个是根Window，使用slidBackEnabled可以使ios的页面右滑返回上一个页面失效
             api.openWin({
@@ -23,9 +25,13 @@
                     slidBackEnabled: false
                 }
             })
-        
+
         }
 
+        // 初始化本地数据库及应用需要的相关表结构
+        function initDatabase() {
+            $db.open();
+        }
 
 </script>
 </html>

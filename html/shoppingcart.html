@@ -188,7 +188,7 @@
                 <div class="bottom">不含运费</div>
             </div>
         </div>
-        <div class="buy">
+        <div class="buy" onclick="toOrder()">
             <img class="buy-button" src="../image/buy.png">
         </div>
     </footer>
@@ -212,14 +212,37 @@ apiready = function() {
           w: "auto",
           h:heights
       },
-      pageParam: {
-          wareId: api.pageParam. wareId
-      },
+      bounces:true
   });
+
 };
 
 function back(){
+  // api.execScript({
+  //     name:'main',
+  //     frameName: 'minicart_frame',
+  //     script: 'a();'
+  // });
     api.closeWin();
+}
+
+//设置金额和数量，有shopping_frame页面调用
+function fnSetShoppingCartAmount(count_, amount_){
+  var amount = $('.amount');
+  var count = $('.count')
+  count.html(count_)
+  amount.html(amount_)
+}
+
+function toOrder(){
+  api.openWin({
+      name: 'order',
+      url: './order.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+
 }
 
 </script>

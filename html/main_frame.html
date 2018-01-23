@@ -187,24 +187,34 @@
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
-<script type="text/javascript" src="../script/comen.js"></script>
-<script src="https://ciphertrick.com/demo/jquerysession/js/jquerysession.js"></script>
+<script type="text/javascript" src="../script/db.js"></script>
 <script type="text/javascript">
-  apiready = function(){
+apiready = function(){
         init();//初始化数据
         fnEventListenter();//初始化默认监听事件
         initRefresh();//下拉刷新
         updateBanner();//更新banner图片
         fnGetWareList(false);  // 获取商品列表
+        //清除数据，调试用的
+        // $db.delect(function(ret,err){
+        //   if(ret){
+        //     console.log(JSON.stringify(ret))
+        //   }else{
+        //     console.log(JSON.stringify(err))
+        //   }
+        // });
+        // $db.select(function(res,err){
+        //   console.log(JSON.stringify(res))
+        // })
   };
 
 var currentCity, wareTypeList, skip = 0,Limit = 3;
-
+//初始化方法
 function init(){
     currentCity = $api.getStorage('currentCity');
     wareTypeList = $api.getStorage('wareTypeList');
 }
-
+//监听事件
 function fnEventListenter(){
     //监听滚动到底部
     api.addEventListener({
@@ -228,8 +238,28 @@ function fnEventListenter(){
              alert( JSON.stringify( err ) );
         }
     });
-}
 
+    //实现了再购物列表页面shoppingcart_frame修改数据本页面的数据能实时改变
+    api.addEventListener({
+        name: 'updateShoppingCart'
+     }, function(ret, err){
+        if( ret ){
+          if (ret.value) {
+              // 获取相应商品元素的信息
+              var id ="#"+ret.value.wareId;
+              var count = $(id);
+              if (count) {
+                  // 更新商品数量及显示状态
+                count.html(ret.value.wareCount);
+                count.parent().css('display',(ret.value.wareCount>0)?'block':'none');
+              }
+          }
+        }else{
+             alert( JSON.stringify( err ) );
+        }
+    });
+
+}
 //实现下拉刷新
 function initRefresh(){
   api.setRefreshHeaderInfo({
@@ -244,7 +274,6 @@ function initRefresh(){
     fnGetWareList(false);//更新商品列表
  });
 }
-
 // 获取商品列表，通过loadMore_参数区分是首次加载（false）还是上拉加载更多(true)
 function fnGetWareList(loadMore_){
     if(loadMore_){ //loadMore_是true上拉加载的时候就出现
@@ -283,13 +312,13 @@ function fnGetWareList(loadMore_){
           "X-APICloud-AppKey": "2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476"
           }
     },function(ret, err){
+      // console.log(JSON.stringify(ret))
         if (ret) {
             api.refreshHeaderLoadDone();//有数据了让刷新消失
             var view ='';
             for(var i = 0;i<ret.length;i++){
               // console.log(ret[i].id);
-              var dataId = ret[i].id;
-              view += '<li>'+
+              view += '<li onclick = fnOpenWareWin("'+ret[i].id+'")>'+
                   '<div class="pic">'+
                       '<img src="'+ret[i].thumbnail.url+'" alt="">'+
                   '</div>'+
@@ -311,15 +340,16 @@ function fnGetWareList(loadMore_){
             }
             if(loadMore_){
               $('.prodoct ul').append(view);
-              if(ret.length<Limit){
+            if(ret.length<Limit){
                 $('.loading p').html('没有更多了！')
               }
             }else{
               $('.prodoct ul').html(view);
             }
           //  api.parseTapmode();
+          // 如果商品已存在购物车中，显示商品在购物车中的数量
+             fnShowWareCountInShoppingCart(ret);
         } else {
-
             api.toast({
                 msg: '加载数据失败',
                 duration: 2000,
@@ -331,7 +361,6 @@ function fnGetWareList(loadMore_){
     });
 
 }
-
 //更新banner图
 function updateBanner(){
     var wareTypeList = $api.getStorage('wareTypeList');
@@ -341,13 +370,75 @@ function updateBanner(){
           $('.banner img').attr('src',ret.url);
     });
 }
-
-// 减
-function fnMinus(data){
-
-}
 //加
-function fnAdd(data){
+function fnAdd(wareId_){
+  var count = $("#"+wareId_);
+  var countNum = parseInt(count.html());//先获取标签里面的值，每次点击再加一
+  countNum+=1;
+  count.html(countNum);
+  count.parent().css('display',(countNum>0)?'block':'none');
+  api.sendEvent({
+        name: 'updateShoppingCart',
+        extra: {
+            wareId:wareId_,//把当个点击的商品的id传到shoppingcart_frame页面中
+            wareCount:countNum,//把当个点击的商品的数量传到shoppingcart_frame页面中
+        }
+    });
+}
+// 减
+function fnMinus(wareId_){
+  var count = $("#"+wareId_);
+  var countNum = parseInt(count.html());
+  countNum-=1;
+  count.html(countNum);
+  count.parent().css('display',(countNum>0)?'block':'none');
+  api.sendEvent({
+        name: 'updateShoppingCart',
+        extra: {
+            wareId:wareId_,//把当个点击的商品的id传到shoppingcart_frame页面中
+            wareCount:countNum,//把当个点击的商品的数量传到shoppingcart_frame页面中
+        }
+    });
+}
+//获得前一次在购物车中的商品数量显示在商品列表中
+function fnShowWareCountInShoppingCart(data_){
+  //遍历栏目中的所有商品对比在购物车数据库中的数量，如果存在就取出来显示在页面上
+  for(var i =0;i<data_.length;i++){
+    // console.log(JSON.stringify(data_[i].id))
+      $db.select(data_[i].id,function(ret,err){
+        // console.log(JSON.stringify(ret))  //循环出数据库存在的每一条数据{"data":[{"wareId":"56c94a0426f863e874c76cb0","wareCount":"2"}]
+           if (ret && ret.data.length > 0) {
+             // 获得商品在购物车中的数量，更新数量和状态
+             var wareCount = ret.data[0].wareCount;
+             var id ="#"+ret.data[0].wareId;
+             var count = $(id);
+             count.html(wareCount);
+             count.parent().css('display',(wareCount>0)?'block':'none');
+           }
+
+        })
+  }
+}
+
+function fnOpenWareWin(wareId_){
+  // 当点击修改商品数量按钮的时候，并不去打开商品详情窗口
+  if (event.target.className == 'minus' || event.target.className == 'add') {
+      return;
+  }
+  //获取当前点击商品在购物车中的数量
+  var count = $("#"+wareId_);
+  var wareCount = count.html();
+  api.openWin({
+      name: 'ware',
+      url: './ware.html',
+      pageParam: {
+        wareId: wareId_,
+        wareCount: wareCount
+      },
+      animation: {
+            type: "fade"
+        }
+  });
 
 }
 

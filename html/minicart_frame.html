@@ -54,11 +54,11 @@
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
-<script type="text/javascript" src="../script/comen.js"></script>
+<script type="text/javascript" src="../script/db.js"></script>
 <script type="text/javascript">
   apiready = function(){
-  
-    });
+    //先调用一次让刚开始进来就显示总数量价格
+    getWareListFromDB();
     //监听整个页面的点击事件
     api.addEventListener({
         name:'tap'
@@ -66,15 +66,104 @@
        api.openWin({
            name: 'shoppingcart',
            url: './shoppingcart.html',
-           pageParam: {
-               wareId: wareId_,
-               prices:prices,
-               count:count,
-           }
        });
     });
-
+    //监听自定义updateShoppingCart事件,更新商品数量和总金额
+    api.addEventListener({
+        name: 'updateShoppingCart'
+    }, function(ret, err){
+        if( ret ){
+            $db.select(ret.value.wareId,function(result,err){
+              if(result&&result.data.length>0){
+                $db.update(ret.value.wareId,ret.value.wareCount,getWareListFromDB)
+              }else{
+                $db.insert(ret.value.wareId,ret.value.wareCount,getWareListFromDB);
+              }
+            })
+        }else{
+             alert( JSON.stringify( err ) );
+        }
+    });
   }
+
+  // 从updateShoppingCart事件存入数据库的数据中，获取商品（购物车中的商品列表）
+  function getWareListFromDB(){
+      //这里select不用存入wareId了，这是查询所有存入数据库中的商品数据
+      $db.select(function(ret,err){
+        // console.log(JSON.stringify(ret))
+        if (ret && ret.data.length > 0) {
+            // 获取购物车中的商品详细信息，如当前价格
+            var wares = [];
+            for(var i=0;i<ret.data.length;i++){
+              // 把数量不为0的商品id存放到数组中，因为调用减方法是数量为0的产品也会在数据库表中
+               if (ret.data[i].wareCount != 0) {
+                   wares.push(ret.data[i].wareId);
+               }
+            }
+            //通过单个商品的id去显示该商品
+            var params = {
+              fields: {},
+              where: {
+                  id: {
+                      inq: wares
+                  }
+              },
+              skip: 0,
+              limit: wares.length
+            }
+            var params = $api.jsonToStr(params);
+            api.ajax({
+                    url: 'http://d.apicloud.com/mcm/api/ware?filter=' + params,
+                    method: 'get',
+                    headers: {
+                        "X-APICloud-AppId": "A6921544633372",
+                        "X-APICloud-AppKey": "2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476"
+                    }
+                },function(res,err){
+                   if(res){
+                      //  console.log(JSON.stringify(res))
+                      for(var i=0; i<res.length; i++){
+                          for(var j=0;j<ret.data.length;j++){
+                            if(res[i].id ==ret.data[j].wareId ){
+                              //把数据库中当前id商品的所有数量赋值给当前id的商品新添加的字符串wareCount
+                               res[i].wareCount = ret.data[j].wareCount;
+                            }
+                          }
+                       }
+                        fnGetShoppingCartAmount(res);
+                    }else{
+                      alert(JOSN.stringify(err));
+                    }
+            })
+        }else{
+          alert(JSON.stringify(err))
+        }
+      })
+  }
+  // 计算并展示购物车中的商品总数和总金额
+  function fnGetShoppingCartAmount (data_) {
+      var amountValue = 0;//商品数量
+      var countValue = 0;//商品价格
+      // console.log(data_[i].wareCount)
+      for (var i=0; i<data_.length; i++) {
+          countValue += parseInt(data_[i].wareCount);
+          amountValue += parseFloat(data_[i].price) * parseInt(data_[i].wareCount);
+      }
+      amountValue = Math.round(amountValue * 10)/10;//解决parseFloat精度问题
+      var amount = $('.price');
+      amount.html(amountValue)
+      var count = $('.count');
+      count.css("display",(countValue > 0) ? 'inline' : 'none');
+      count.html(countValue);
+  }
+
+// function a(){
+//     api.execScript({
+//         name:'main',
+//         frameName: 'main_frame',
+//         script: 'fnGetWareList(false);'
+//     });
+// }
 
 </script>
 </html>

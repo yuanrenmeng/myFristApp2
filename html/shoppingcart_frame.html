@@ -194,66 +194,205 @@
                 <div id="count_id" class="count">0</div>
                 <img class="add" src="../image/add.png">
             </div>
-        </div> -->
+        </div>-->
     </section>
     <section id="empty" class="empty"></section>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
-<script src="../script/comen.js"></script>
-<script src="https://ciphertrick.com/demo/jquerysession/js/jquerysession.js"></script>
+<script type="text/javascript" src="../script/db.js"></script>
 <script type="text/javascript">
 apiready = function() {
-  var count =0;
-  var wares = api.pageParam.wareId;
-  var params = {
-    fields: {},
-    where: {
-      id:	{
-        inq:wares
-      }
-    },
-    skip: 0,
-    limit: wares.length
-  }
-  params = $api.jsonToStr(params);
-  api.ajax({
-      url: 'http://d.apicloud.com/mcm/api/ware?filter='+params,
-      method: 'get',
-      headers: {
-        "X-APICloud-AppId": "A6921544633372",
-        "X-APICloud-AppKey": "2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476"
-        }
-   },function(ret, err){
-      if (ret) {
-          var view ='';
-          for(var i = 0;i<ret.length;i++){
-            // console.log(JSON.stringify(ret[i]));
-            var dataId = ret[i].id;
-            view += '<div id="ware_id" class="ware">'+
-              '  <div class="content">'+
-                    '<div class="select">'+'</div>'+
-                    '<img class="thumbnail" src="'+ret[i].thumbnail.url+'">'+
-                    '<div class="info">'+
-                        '<div class="name">'+ret[i].name+'</div>'+
-                        '<div class="price-tag">'+
-                            '<span class="price">￥'+ret[i].price+'</span>'+
-                            '<span class="unit">/'+ret[i].unit+'</span>'+
-                        '</div>'+
-                    '</div>'+
-                '</div>'+
-              '  <div class="control">'+
-                    '<img class="minus" src="../image/minus.png" onclick=fnMinuss("'+ret[i].id+'")>'+
-                    '<div id="'+ret[i].id+'" class="count">'+0+'</div>'+
-                    '<img class="add" src="../image/add.png"  onclick=fnAdds("'+ret[i].id+'")>'+
-                '</div>'+
-            '</div>'
-          }
-          $("#list").append(view);
-      }
-  });
+  //从数据库获取数据显示在页面事件
+  getWareListFromDB();
+  //监听自定义购物车更新时间
+  // initEventListener();
 };
 
+var curShoppingCart;
+function initEventListener(){
+  api.addEventListener({
+      name: 'updateShoppingCart'
+    }, function(ret, err) {
+      if (ret) {
+        console.log(ret);
+          if (ret.value) {
+              // 获取相应商品元素的信息
+              var count = $("#"+ret.value.wareId);
+
+              if (count) {
+                  // 更新商品数量及显示状态
+                count.html(ret.value.wareCount);
+                count.parents('.ware').css('display',(ret.value.wareCount>0)?'block':'none');
+              }
+          }
+      }else{
+          console.log(JSON.stringify(err))
+      }
+    });
+}
+function getWareListFromDB(){
+  $db.select(function(ret,err){
+    if(ret){
+
+      var wares = [];
+      for(var i=0;i<ret.data.length;i++){
+        // console.log(res.data[i].wareCount)
+        if(ret.data[i].wareCount != 0){
+          wares.push(ret.data[i].wareId);
+
+        }
+      }
+      var params = {
+        fields: {},
+        where: {
+          id:	{
+            inq:wares
+          }
+        },
+        skip: 0,
+        limit: wares.length
+       }
+      params = $api.jsonToStr(params);
+      api.ajax({
+          url: 'http://d.apicloud.com/mcm/api/ware?filter='+params,
+          method: 'get',
+          headers: {
+            "X-APICloud-AppId": "A6921544633372",
+            "X-APICloud-AppKey": "2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476"
+            }
+        },function(res, err){
+
+          if (res) {
+              var view ='';
+              for(var i = 0;i<res.length;i++){
+                //先循环，因为在刚开始$db.select的时候把ret.data[i].wareCount为零的商品排除了
+                //先循环给获取的有数量的商品添加具体对应的数量字符串wareCount
+                for (var j = 0; j < ret.data.length; j++) {
+                      if (res[i].id == ret.data[j].wareId) {
+                          res[i].wareCount = ret.data[j].wareCount;
+                      }
+                  }
+                // console.log(JSON.stringify(ret[i]));
+                view += '<div id="ware_id" class="ware">'+
+                  '  <div class="content">'+
+                        '<div class="select" id="select_'+res[i].id+'" onclick =fnSelect("'+res[i].id+'")>'+'</div>'+
+                        '<img class="thumbnail" src="'+res[i].thumbnail.url+'">'+
+                        '<div class="info">'+
+                            '<div class="name">'+res[i].name+'</div>'+
+                            '<div class="price-tag">'+
+                                '<span class="price">￥'+res[i].price+'</span>'+
+                                '<span class="unit">/'+res[i].unit+'</span>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>'+
+                  '  <div class="control">'+
+                        '<img class="minus" src="../image/minus.png" onclick=fnMinuss("'+res[i].id+'")>'+
+                        '<div id="'+res[i].id+'" class="count">'+res[i].wareCount+'</div>'+
+                        '<img class="add" src="../image/add.png"  onclick=fnAdds("'+res[i].id+'")>'+
+                    '</div>'+
+                '</div>';
+              }
+              $("#list").append(view);
+              // 保存为当前页面的购物车信息，便于在当前页面中添加或删除商品是操作
+              curShoppingCart = res;
+              // 计算购物车中的商品总数及总金额
+              fnGetShoppingCartAmount(res)
+          }
+      });
+
+    }
+  })
+}
+//计算当前窗口中购物车中的商品数量(把总商品数和总价格使用自定义事件发送到shopping.HTML中)
+function fnGetShoppingCartAmount(data_){
+  var countValue = 0;//商品数量
+  var amountValue = 0;//商品价格
+  var offState  = 0;//记录数据库中数量不为0的商品有多少（因为购物车数据库中的数据当商品数量为零时也存在）
+  for (var i=0; i<data_.length; i++) {
+      //判断该商品是否是在选中状态，如果是在off没有选中状态的就跳过不计算当前的商品
+      if(data_[i].wareState == "off"){
+        if(data_[i].wareCount>0){
+            offState +=1;
+        }
+          continue;
+      }
+      countValue += parseInt(data_[i].wareCount);
+      amountValue += parseFloat(data_[i].price) * parseInt(data_[i].wareCount);
+  }
+  amountValue = Math.round(amountValue * 10)/10;//解决parseFloat精度问题
+  if(countValue ==0 && offState ==0){
+    $('.empty').css('display','block');
+  }
+  api.execScript({
+      name: 'shoppingcart',
+      script: 'fnSetShoppingCartAmount('+countValue+','+amountValue+')'
+  });
+}
+function fnAdds(wareId_){
+  var count = $("#"+wareId_);
+  var countNum = parseInt(count.html());//先获取标签里面的值，每次点击再加一
+  countNum+=1;
+  count.html(countNum);
+  // count.parents('.ware').css('display',(countNum>0)?'block':'none');
+  fnUpdataShoppingCarAmount(wareId_,countNum);
+  api.sendEvent({
+        name: 'updateShoppingCart',
+        extra: {
+            wareId:wareId_,//把当个点击的商品的id传到shoppingcart_frame页面中
+            wareCount:countNum,//把当个点击的商品的数量传到shoppingcart_frame页面中
+        }
+    });
+
+}
+function fnMinuss(wareId_){
+  var count = $("#"+wareId_);
+  var countNum = parseInt(count.html());
+  countNum-=1;
+  count.html(countNum);
+  count.parents('.ware').css('display',(countNum>0)?'block':'none');
+  fnUpdataShoppingCarAmount(wareId_,countNum)
+  api.sendEvent({
+        name: 'updateShoppingCart',
+        extra: {
+            wareId:wareId_,//把当个点击的商品的id传到shoppingcart_frame页面中
+            wareCount:countNum,//把当个点击的商品的数量传到shoppingcart_frame页面中
+        }
+    });
+}
+//当加减商品后更新当前窗口中显示的购物车的数量
+function fnUpdataShoppingCarAmount(wareId_, wareCount_){
+    //循环遍历没有加减时（或者加减后上一次的数据，即因为每次加减后都使用sendEvent事件中，后面在minicart中又存放到数据库中，
+    //当前页面又遍历数据库）
+    for(var i = 0;i<curShoppingCart.length;i++){
+      if(curShoppingCart[i].id == wareId_){
+        curShoppingCart[i].wareCount = wareCount_;
+      }
+    }
+    //再次把结果放到当前窗口购物车中
+    fnGetShoppingCartAmount(curShoppingCart);
+}
+//设置商品的选中和取消
+function fnSelect(wareId_){
+  var selectId = $("#select_"+wareId_);
+  if(!selectId.hasClass("select-off")){
+      selectId.addClass("select-off");
+      fnUpdataWareState(wareId_,'off')
+  }else{
+      selectId.removeClass("select-off");
+      fnUpdataWareState(wareId_,'on')
+  }
+}
+// 更新当前窗口中显示的购物车中的商品选中状态(wareState_)
+function fnUpdataWareState(wareId_,wareState_){
+  for(var i=0;i<curShoppingCart.length;i++){
+    if(curShoppingCart[i].id == wareId_){
+      //给当前通过select获取到的的所有商品添加一个状态参数，判断这个商品是否被选中
+      curShoppingCart[i].wareState = wareState_;
+    }
+  }
+  fnGetShoppingCartAmount(curShoppingCart)
+}
 </script>
 
 </html>

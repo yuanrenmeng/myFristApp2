@@ -7,17 +7,17 @@
     <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
     <title>商品Frame</title>
     <link rel="stylesheet" type="text/css" href="../css/api.css" />
-    <style>
+   <style>
     html,
     body {
         height: 100%;
         min-height: 100%;
     }
-    
+
     section {
         height: 100%;
     }
-    
+
     .info-name {
         box-sizing: border-box;
         width: 100%;
@@ -26,7 +26,7 @@
         padding-left: 8px;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .info-name .name {
         width: 100%;
         height: 24px;
@@ -34,7 +34,7 @@
         color: #444;
         font-size: 18px;
     }
-    
+
     .info-name .description {
         width: 100%
         height: 20px;
@@ -42,7 +42,7 @@
         color: #888;
         font-size: 14px;
     }
-    
+
     .info-price {
         box-sizing: border-box;
         width: 100%;
@@ -51,7 +51,7 @@
         padding-left: 8px;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .info-price .price {
         width: 100%;
         height: 24px;
@@ -60,7 +60,7 @@
         font-size: 24px;
         font-weight: bolder;
     }
-    
+
     .info-price .other {
         display: -webkit-box;
         display: -webkit-flex;
@@ -71,7 +71,7 @@
         width: 100%;
         height: 20px;
     }
-    
+
     .info-price .other div {
         width: 100%;
         height: 20px;
@@ -82,31 +82,31 @@
         font-size: 14px;
         color: #888;
     }
-    
+
     .info-price .other .origin-price {
         box-sizing: border-box;
         padding-left: 8px;
         text-align: left;
     }
-    
+
     .info-price .other .unit {
         box-sizing: border-box;
         text-align: center;
     }
-    
+
     .info-price .other .place {
         box-sizing: border-box;
         padding-right: 16px;
         text-align: right;
     }
-    
+
     .info-discount {
         box-sizing: border-box;
         width: 100%;
         height: 34px;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .info-discount .name {
         display: inline-block;
         width: auto;
@@ -115,7 +115,7 @@
         margin-left: 8px;
         color: #444;
     }
-    
+
     .info-discount .value {
         display: inline-block;
         width: auto;
@@ -128,7 +128,7 @@
         color: #fff;
         background-color: #e3007f;
     }
-    
+
     .push {
         position: relative;
         box-sizing: border-box;
@@ -139,12 +139,12 @@
         color: #888;
         font-size: 12px;
     }
-    
+
     .push .top {
         height: 24px;
         line-height: 24px;
     }
-    
+
     .push .bottom {
         height: 20px;
         line-height: 20px;
@@ -180,8 +180,43 @@
     </section>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
+<script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
 apiready = function() {
+  api.showProgress({
+    style: 'default',
+    animationType: 'fade',
+    title: '努力加载中...',
+    text: '先喝杯茶...',
+    modal: false
+  });
+  var params = {
+      fields: {},
+      where: {
+        id:	{
+          inq:api.pageParam.wareId
+        }
+      },
+      include: ["wareInfoPointer"],
+      skip:0,
+      limit:1,
+     }
+    params = $api.jsonToStr(params);
+    api.ajax({
+        url: 'http://d.apicloud.com/mcm/api/ware?filter='+params,
+        method: 'get',
+        headers: {
+          "X-APICloud-AppId": "A6921544633372",
+          "X-APICloud-AppKey": "2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476"
+          }
+    },function(ret, err){
+        if (ret) {
+            alert( JSON.stringify( ret ) );
+            api.hideProgress();
+        } else {
+            alert( JSON.stringify( err ) );
+        }
+    });
 
 };
 </script>
