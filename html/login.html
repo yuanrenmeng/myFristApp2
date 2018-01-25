@@ -22,7 +22,7 @@
             background-size:12px 18px ;
             position: absolute;
             left:0;
-            top: 0;
+            top: 26px;
         }
         h1{
             font-size:18px;
@@ -30,7 +30,7 @@
         }
         .register{
             position: absolute;
-            top: 0px;
+            top: 26px;
             right: 6px;
         }
     </style>
@@ -46,12 +46,16 @@
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
     apiready = function(){
-        api.openFrame({
+      var y = $api.getStorage('headerH');
+      var header = document.querySelector('.login_header');
+      // 实现沉浸式状态栏效果
+      $api.fixStatusBar(header);
+      api.openFrame({
             name: 'login_frame',
             url: './login_frame.html',
             rect: {
                 x: 0,
-                y: 50,
+                y: y,
                 w: 'auto',
                 h: 'auto'
             },

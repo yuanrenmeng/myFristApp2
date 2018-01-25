@@ -33,19 +33,63 @@
 <body>
       <div class="register_content">
           <div class="register_y">
-              <input type="text" placeholder="用户名">
+              <input type="text" placeholder="用户名" class="user">
           </div>
           <div class="register_y">
-              <input type="text" placeholder="密码">
+              <input type="text" placeholder="密码" class="password">
           </div>
-          <button>注册</button>
+          <button onclick="registersTo()">注册</button>
       </div>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
+// 注册页面注册后生产的id为获取用户信息的id为登录页面的userId,登录页面自己也有个id
     apiready = function(){
-
     };
+    function registersTo(){
+      var register_user = $('.user').val();
+      var register_pwd = $('.password').val();
+      api.ajax({
+          url: 'https://d.apicloud.com/mcm/api/user',
+          method: 'post',
+          headers: {
+            "X-APICloud-AppId": "A6914327011091",
+            "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
+          },
+          data: {
+              values: {
+                   "username": register_user,
+                   "password": register_pwd
+              }
+          }
+      },function(ret, err){
+        alert(JSON.stringify(ret.username))
+          if (ret&&ret.id) {
+            api.alert({
+              title: '提示',
+               msg: '注册成功',
+            },function(ret ,err){
+                if(ret){
+                  // 跨窗口执行Script, 将用户名传给登录页面
+                  api.execScript({
+                      name: 'login',
+                      frameName: 'longin_frame',
+                      script: 'fnSetUsername(\"' + register_user + '\");'
+                  });
+                  api.closeWin();
+                }
+            })
+              // alert( JSON.stringify( ret.id ) );
+              // alert( JSON.stringify( ret.username ) );
+          } else {
+            api.toast({
+              msg: '注册失败，用户名已被占用',
+              duration: 2000,
+              location: 'middle'
+          });
+          }
+      });
+    }
 </script>
 </html>

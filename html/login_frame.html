@@ -44,20 +44,60 @@
 <body>
       <div class="login_content">
           <div class="login_y">
-              <input type="text" placeholder="用户名">
+              <input type="text" placeholder="用户名" class="user">
           </div>
           <div class="login_y">
-              <input type="text" placeholder="密码">
+              <input type="text" placeholder="密码" class="password">
           </div>
-          <button>登录</button>
+          <button onclick="login_in()">登录</button>
           <button>使用微信登录</button>
       </div>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
-    apiready = function(){
-
-    };
+var login_user,login_pwd;
+   function login_in(){
+     login_user = $('.user').val();
+     login_pwd = $('.password').val();
+     api.ajax({
+         url: 'http://d.apicloud.com/mcm/api/user/login',
+         method: 'post',
+         headers: {
+           "X-APICloud-AppId": "A6914327011091",
+           "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841"
+         },
+         data: {
+           values: {
+                "username": login_user,
+                "password": login_pwd
+           }
+         }
+     },function(ret, err){
+      //  alert(JSON.stringify(ret))
+       if (ret) {
+           // 保存用户信息
+          $api.setStorage('userInfo', ret);
+          api.alert({
+              title: '提示',
+              msg: '登录成功',
+          }, function(ret, err) {
+              if (ret) {
+                  api.closeWin();
+              }
+          });
+         } else {
+             api.toast({
+                msg: '登录失败，用户名或密码错误',
+                duration: 2000,
+                location: 'middle'
+            });
+         }
+     });
+   }
+   //register注册页面传递过来的用户名
+   function fnSetUsername(username_){
+     login_user = username_;
+   }
 </script>
 </html>

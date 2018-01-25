@@ -132,14 +132,14 @@
     <header id="header">
         <div class="back" onclick="api.closeWin();"></div>
         <h1>商品详情</h1>
-        <div class="right">分享</div>
+        <div class="right" onclick="fnOpenShareFrame()">分享</div>
     </header>
     <section></section>
     <footer id="footer">
         <div class="control">
-            <img id="minus" src="../image/minus.png" class="minus">
+            <img id="minus" src="../image/minus.png" class="minus" onclick="fnMinus()">
             <div id="count" class="count">0</div>
-            <img id="add" src="../image/add.png" class="add">
+            <img id="add" src="../image/add.png" class="add" onclick="fnAdd()">
         </div>
         <img src="../image/buynow.png" class="buy-button">
     </footer>
@@ -168,8 +168,75 @@ apiready = function() {
     },
       bounces:true
   });
-
+  // 打开mini购物车Frame
+  api.openFrame({
+      name: 'minicart_frame',
+      url: './minicart_frame.html',
+      rect: {
+          x: 0,
+          y: api.winHeight - 55 - h,
+          w: 100,
+          h: 36
+      },
+      bounces: false // 关闭弹动
+  });
+  // 将mini购物车Frame放置在首页Window所有Frame的最上层
+  api.bringFrameToFront({
+      from: 'minicart_frame'
+  });
 };
+
+// 添加到购物车按钮的监听函数
+function fnAdd() {
+
+    // 更新商品数量及显示状态
+    var wareCount = parseInt($('#count').html());
+    wareCount += 1;
+    $('#count').html(wareCount);
+    // 发送购物车更新自定义事件，传递商品Id和商品数量
+    api.sendEvent({
+        name: 'updateShoppingCart',
+        extra: {
+            wareId: api.pageParam.wareId,
+            wareCount: wareCount
+        }
+    });
+}
+
+// 从购物车删除按钮的监听函数
+function fnMinus() {
+
+    // 更新商品数量及显示状态
+      var wareCount = parseInt($('#count').html());
+    if (wareCount > 0) {
+        wareCount -= 1;
+    }
+  $('#count').html(wareCount);
+
+    // 发送购物车更新自定义事件，传递商品Id和商品数量
+    api.sendEvent({
+        name: 'updateShoppingCart',
+        extra: {
+            wareId: api.pageParam.wareId,
+            wareCount: wareCount
+        }
+    });
+}
+
+// 打开分享Frame
+function fnOpenShareFrame() {
+    api.openFrame({
+        name: 'share_frame',
+        url: './share_frame.html',
+        rect: {
+            x: 0,
+            y: 0,
+            w: 'auto',
+            h: 'auto'
+        },
+        bgColor: 'rgba(0,0,0,0.5)' // 设置Frame的透明度
+    });
+}
 </script>
 
 </html>

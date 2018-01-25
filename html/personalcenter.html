@@ -13,7 +13,7 @@
             justify-content: space-around;
             height: 100%;
         }
-        .login_header{
+        #header{
             height: 50px;
             line-height: 50px;
             background-color: #e3007f;
@@ -27,7 +27,8 @@
             background-size:12px 18px ;
             position: absolute;
             left:0;
-            top: 0;
+            top: 50%;
+            margin-top: -25px;
         }
         section{
             flex: 1;
@@ -39,7 +40,6 @@
             flex-flow:row;
             line-height:50px;
         }
-
         .item{
             flex: 1;
         }
@@ -54,7 +54,6 @@
         .setting{
             padding-left: 34px;
             background:url("../image/user_setting.png") no-repeat;
-
         }
         .message{
             padding-left: 46px;
@@ -67,8 +66,8 @@
     </style>
 </head>
 <body>
-      <div class="login_header">
-          <div class="back"></div>
+      <div id="header">
+          <div class="back" onclick="back()"></div>
       </div>
       <section></section>
       <footer id="footer">
@@ -90,7 +89,30 @@
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
     apiready = function(){
-
+      var headerheader = document.querySelector('#header');
+      var footer = document.querySelector('#footer');
+      // 实现沉浸式状态栏效果
+      $api.fixStatusBar(header);
+      // 计算header的高度
+      headerH = $api.offset(header).h;
+      footerH = $api.offset(footer).h;
+      var params = api.pageParam.name;//获取到面页面传递过来的用户名userInfo.id
+      // alert(JSON.stringify(params))
+      api.openFrame({
+          name: 'personalcenter_frame',
+          url: './personalcenter_frame.html',
+          rect: {
+              x: 0,
+              y: headerH,
+              w: 'auto',
+              h: api.winHeight - headerH - footerH
+          },
+          pageParam: {name: params},
+          bounces: true
+      });
     };
+    function back(){
+        api.closeWin();
+    }
 </script>
 </html>

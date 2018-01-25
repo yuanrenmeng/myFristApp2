@@ -183,6 +183,68 @@
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
 apiready = function() {
+//初始化轮播图
+initUIScrollPicture();
+//获取商品的详细数据
+getWareInfo(api.pageParam.wareId)
+};
+var UIScrollPictur;
+function initUIScrollPicture(){
+  UIScrollPicture = api.require('UIScrollPicture');
+  //设置元素的宽高
+  $('#picture').css({'width':api.winWidth,'height':api.winWidth});
+  UIScrollPicture.open({
+      rect: {
+          x: 0,
+          y: 0,
+          w: api.winWidth,
+          h: api.winWidth
+      },
+      data: {
+          paths: [
+              'widget://image/default_rect.png',
+              'widget://image/default_rect.png',
+              'widget://image/default_rect.png',
+              'widget://image/default_rect.png',
+              'widget://image/default_rect.png',
+          ],
+      },
+      styles: {
+          caption: {
+              height: 35,
+              color: '#E0FFFF',
+              size: 13,
+              bgColor: '#696969',
+              position: 'bottom'
+          },
+          indicator: {
+             dot:{
+               w:20,
+               h:10,
+               r:5,
+               margin:10
+            },
+              align: 'center',
+              color: '#FFFFFF',
+              activeColor: '#DA70D6'
+          }
+      },
+      placeholderImg: 'widget://res/slide1.jpg',
+      contentMode: 'scaleToFill',
+      interval: 3,
+      fixedOn: api.frameName,
+      loop: true,
+      fixed: false
+  }, function(ret, err) {
+      if (ret) {
+          // alert(JSON.stringify(ret));
+      } else {
+          // alert(JSON.stringify(err));
+      }
+  });
+}
+
+function getWareInfo(data_){
   api.showProgress({
     style: 'default',
     animationType: 'fade',
@@ -193,9 +255,7 @@ apiready = function() {
   var params = {
       fields: {},
       where: {
-        id:	{
-          inq:api.pageParam.wareId
-        }
+        id:data_
       },
       include: ["wareInfoPointer"],
       skip:0,
@@ -211,14 +271,39 @@ apiready = function() {
           }
     },function(ret, err){
         if (ret) {
-            alert( JSON.stringify( ret ) );
             api.hideProgress();
+            // 更新商品详情展示
+            fnUpdateWareInfo(ret[0]);
         } else {
             alert( JSON.stringify( err ) );
         }
     });
+}
 
-};
+function fnUpdateWareInfo(data_){
+    $('#wareName').html(data_.name);
+    $('#description').html(data_.description);
+    $('#price').html(data_.price);
+    $('#originPrice').html(data_.originPrice);
+    $('#unit').html(data_.unit);
+    $('#detail').html(data_.detail);
+    $('#wareName').html(data_.name);
+
+    //更新banner图片、接口中的图片只有一张，剩下的是null
+    var path = [];
+    for(var i=0;i<6;i++){
+      if(data_.wareInfo['picture' + i]){
+          path.push(data_.wareInfo['picture' + i].url);
+      }
+    }
+    //更新模块数据
+    UIScrollPicture.reloadData({
+    data: {
+        paths: path,
+    }
+});
+
+}
 </script>
 
 </html>

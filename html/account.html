@@ -22,14 +22,14 @@
             background-size:12px 18px ;
             position: absolute;
             left:0;
-            top: 0;
+            top: 26px;
         }
         .login_header .right{
             height:50px;
             width:40px;
             position: absolute;
             right:10px;
-            top: 0;
+            top: 26px;
             background:url("../image/accounthelp.png") no-repeat right center;
             -webkit-background-size:auto 20px ;
             background-size: auto 20px;
@@ -88,7 +88,7 @@
 </head>
 <body>
       <div class="login_header">
-          <div class="back"></div>
+          <div class="back" onclick="back()"></div>
           <div class="right"></div>
           <h2>优鲜余额</h2>
           <p>&yen;0</p>
@@ -102,8 +102,28 @@
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
-    apiready = function(){
-
-    };
+apiready = function(){
+  var login_header = document.querySelector('.login_header');
+  var nav = document.querySelector('nav');
+  // 实现沉浸式状态栏效果
+  $api.fixStatusBar(login_header);
+    var y = parseInt($api.offset(login_header).h);
+    var navH = parseInt($api.offset(nav).h);
+    api.openFrame({
+        name: '',
+        url: '',
+        rect: {
+            x: 0,
+            y: y+navH,
+            w: 'auto',
+            h: 'auto'
+        },
+        pageParam: {name: 'pageparam'},
+        bounces: true
+    });
+};
+function back(){
+    api.closeWin();
+}
 </script>
 </html>

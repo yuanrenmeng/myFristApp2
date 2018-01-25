@@ -73,6 +73,7 @@
             padding-left:40px;
             font-size:14px;
             color: #444;
+            box-sizing: border-box;
         }
         .option .more{
             background: url("../image/arrow_right.png") no-repeat right center;
@@ -89,38 +90,203 @@
 <body>
     <div class="header">
         <div class="icon-panel">
-            <div class="icon" id="icon"></div>
+            <div class="icon" id="icon" onclick="fnSetAvatar()"></div>
         </div>
         <div class="username" id="username">brode</div>
         <div class="account">积分：<span>0</span> | 余额：<span>&yen;0</span></div>
     </div>
     <section>
-        <div class="option">
+        <div class="option" onclick="fnOpenMyOrderWin();">
             <div class="icon_myorder icon"></div>
             <div class="title">我的订单</div>
             <div class="more">查看所有订单详情</div>
         </div>
     </section>
     <section>
-        <div class="option">
+        <div class="option" onclick="fnOpenAccountWin();">
             <div class="icon_account icon"></div>
             <div class="title">我的账户</div>
             <div class="more">充值有礼</div>
         </div>
     </section>
     <section>
-        <div class="option">
+        <div class="option" onclick="fnOpenCouponWin();">
             <div class="icon_coupon icon"></div>
             <div class="title">优惠券</div>
             <div class="more">查看我的优惠券</div>
         </div>
     </section>
     <section>
-        <div class="option">
+        <div class="option" onclick="fnOpenAddressWin();">
             <div class="icon_address icon"></div>
             <div class="title">收货地址</div>
             <div class="more">管理我的收获地址</div>
         </div>
     </section>
 </body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script src="../script/jquery-1.12.3.min.js"></script>
+<script type="text/javascript">
+//用户头像步骤：首先是冲用户登录界面获取登录的登录信息，里面包换有用户头像的URL，然后更新界面中即更新页面显示的用户头像，
+//然后是改头像，标签添加点击事件，获取相册获取启动拍照获取图片，然后把图片通过上传文件接口上传到服务器中，再通过更改用户头像
+//接口获取上传头像的信息，最后在更改成功的返回函数中再次调用更新页面显示用户头像的方法
+    apiready = function(){
+      fnGetUserInfo();
+    }
+ //获取用户信息
+  function fnGetUserInfo(){
+    //从longin_frame缓存中获取用户信息
+    var  userInfo = $api.getStorage('userInfo');
+    api.ajax({
+        url: 'https://d.apicloud.com/mcm/api/user/'+userInfo.userId,
+        method: 'get',
+        headers: {
+          "X-APICloud-AppId": "A6914327011091",
+          "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841",
+          "Authorization":userInfo.id
+        },
+    },function(ret, err){
+        if (ret) {
+          //更新网页用户头像的显示
+            console.log( JSON.stringify( ret ) );
+          fnUpdateLocalAvatar(ret);
+
+        } else {
+            alert( JSON.stringify( err ) );
+        }
+    });
+  }
+   //更新网页用户头像的显示
+function fnUpdateLocalAvatar(data_){
+  var icon = $('#icon');
+  api.imageCache({
+      url: "http://7y0hol.com1.z0.glb.clouddn.com/apicloud/69f4bd69a698b2fe955bd5a43392c38a.png"
+  }, function(ret, err){
+      if( ret ){
+        icon.css("background",ret.url)
+      }else{
+        api.toast({
+            msg: '获取头像失败',
+            duration: 2000,
+            location: 'bottom'
+        });
+      }
+  });
+}
+//从相册中选择头像
+function fnSetAvatar(){
+  //底部弹出框选择
+  api.actionSheet({
+    title: '选择',
+    cancelTitle: '取消',
+    buttons: ['拍照', '相片']
+  }, function(ret, err) {
+    var index = ret.buttonIndex;
+    var sourceType =['camera','album']
+    api.getPicture({
+        sourceType: sourceType[index-1],
+        allowEdit: true,
+        quality: 50,//图片质量
+        targetWidth: 100,//压缩后的图片宽度
+        targetHeight: 100,//压缩后的图片高度
+    }, function(ret, err){
+        if(ret){
+            //  alert(JSON.stringify(ret.data));//图片路径
+            fnUploadAvatar(ret.data);
+        }else{
+             alert(JSON.stringify(err));
+        }
+    });
+ });
+}
+//把选择头像文件上传到服务器中（上传文件）
+function fnUploadAvatar(avatarUrl_){
+  api.ajax({
+      url: 'https://d.apicloud.com/mcm/api/file',
+      method: 'post',
+      headers: {
+        "X-APICloud-AppId": "A6914327011091",
+        "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841",
+      },
+      data:{
+        values:{
+          filename:'icon'
+        },
+        files:{
+          file:avatarUrl_
+        }
+      }
+  },function(ret, err){
+      if (ret) {
+        fnUpdateUserAtavar(ret);
+      } else {
+          alert( JSON.stringify( err ) );
+      }
+  });
+}
+//更改用户头像
+function fnUpdateUserAtavar(avatar){
+  //从longin_frame缓存中获取用户信息
+  var  userInfo = $api.getStorage('userInfo');
+  api.ajax({
+      url: 'https://d.apicloud.com/mcm/api/user/'+userInfo.userId,
+      method: 'put',
+      headers: {
+        "X-APICloud-AppId": "A6914327011091",
+        "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841",
+      },
+      data: {
+          values: {
+            avatar:	avatar
+          }
+      }
+  },function(ret, err){
+      if (ret) {
+        fnUpdateLocalAvatar(ret)
+      } else {
+          alert( JSON.stringify( err ) );
+      }
+  });
+}
+//打开我的订单
+function fnOpenMyOrderWin(){
+  api.openWin({
+      name: 'myorder',
+      url: './myorder.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+}
+//打开我的账户
+function fnOpenAccountWin(){
+  api.openWin({
+      name: 'account',
+      url: './account.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+}
+//优惠券
+function fnOpenCouponWin(){
+  api.openWin({
+      name: 'coupon',
+      url: './coupon.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+}
+//收货地址
+function fnOpenAddressWin(){
+  api.openWin({
+      name: 'address',
+      url: './address.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+}
+</script>
 </html>
