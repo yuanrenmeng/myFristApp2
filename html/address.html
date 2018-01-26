@@ -39,7 +39,7 @@
       <div class="login_header">
           <div class="back" onclick="back()"></div>
           <h1>收获地址</h1>
-          <div class="add">添加</div>
+          <div class="add" onclick="addAddress()">添加</div>
       </div>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
@@ -65,6 +65,16 @@ apiready = function(){
 };
 function back(){
     api.closeWin();
+}
+function addAddress(){
+  api.openWin({
+      name: 'setaddress',
+      url: './setaddress.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+
 }
 </script>
 </html>

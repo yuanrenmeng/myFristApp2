@@ -103,7 +103,7 @@
 
 <body>
     <header id="header">
-        <div class="back">
+        <div class="back" onclick="api.closeWin()">
             <img src="../image/back.png">
         </div>
         <div class="title">
@@ -112,7 +112,7 @@
     </header>
     <section></section>
     <footer id="footer">
-        <div class="panel">总金额:￥24.9</div>
+        <div class="panel">总金额:<span>￥24.9</span></div>
         <div class="buy" onclick="fnBuy();">
             <img class="buy-button" src="../image/confirm.png">
         </div>
@@ -139,6 +139,15 @@ apiready = function() {
       },
       bounces:true
   });
+  api.addEventListener({
+      name: 'allPrice'
+  }, function(ret, err){
+      if( ret ){
+        // console.log(JSON.stringify(ret))
+        $('.panel span').html(ret.value.price)
+      }
+  });
+
 };
 function fnBuy(){
 

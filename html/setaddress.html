@@ -22,7 +22,7 @@
             background-size:12px 18px ;
             position: absolute;
             left:0;
-            top: 0;
+            top: 26px;
         }
         h1{
             font-size:18px;
@@ -30,7 +30,7 @@
         }
         .remove{
             position: absolute;
-            top: 0px;
+            top: 26px;
             right: 6px;
         }
     </style>
@@ -46,6 +46,24 @@
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
     apiready = function(){
+          var login_header = document.querySelector('.login_header');
+          // 实现沉浸式状态栏效果
+          $api.fixStatusBar(login_header);
+          var y = $api.getStorage('headerH');
+      api.openFrame({
+          name: 'setaddress_frame',
+          url: './setaddress_frame.html',
+          rect: {
+              x: 0,
+              y: y,
+              w: 'auto',
+              h: 'auto'
+          },
+          pageParam: {
+              name: 'test'
+          },
+          bounces: true,
+      });
 
     };
 </script>

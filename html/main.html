@@ -339,6 +339,7 @@ function clickNav(index_){
 //打开个人中心
 function openPersonFrame(){
   //从缓存中取用户数据
+  // $api.rmStorage('userInfo');
     var userInfo = $api.getStorage('userInfo');
     // 判断当前用户是否登录了
     if (userInfo && userInfo.id) {

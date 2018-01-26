@@ -141,7 +141,7 @@
             <div id="count" class="count">0</div>
             <img id="add" src="../image/add.png" class="add" onclick="fnAdd()">
         </div>
-        <img src="../image/buynow.png" class="buy-button">
+        <img src="../image/buynow.png" class="buy-button" onclick="toOrder()">
     </footer>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
@@ -154,6 +154,8 @@ apiready = function() {
   var heights = api.frameHeight - h -y;
   // 实现沉浸式状态栏效果
   $api.fixStatusBar(header);
+  //更新当前的商品数量
+  $('#count').html(api.pageParam.wareCount)
   api.openFrame({
       name: 'ware_frame',
       url: './ware_frame.html',
@@ -186,9 +188,9 @@ apiready = function() {
   });
 };
 
+
 // 添加到购物车按钮的监听函数
 function fnAdd() {
-
     // 更新商品数量及显示状态
     var wareCount = parseInt($('#count').html());
     wareCount += 1;
@@ -236,6 +238,17 @@ function fnOpenShareFrame() {
         },
         bgColor: 'rgba(0,0,0,0.5)' // 设置Frame的透明度
     });
+}
+
+function toOrder(){
+  api.openWin({
+      name: 'order',
+      url: './order.html',
+      pageParam: {
+          name: 'test'
+      }
+  });
+
 }
 </script>
 

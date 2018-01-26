@@ -8,8 +8,8 @@
     <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
     <title>shoppingcart_frame</title>
     <link rel="stylesheet" type="text/css" href="../css/api.css" />
-    <style type="text/css">
-    html,
+  <style type="text/css">
+     html,
     body {
         height: 100%;
         background-color: #eee;
@@ -234,7 +234,6 @@ function initEventListener(){
 function getWareListFromDB(){
   $db.select(function(ret,err){
     if(ret){
-
       var wares = [];
       for(var i=0;i<ret.data.length;i++){
         // console.log(res.data[i].wareCount)

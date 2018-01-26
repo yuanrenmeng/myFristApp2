@@ -26,8 +26,11 @@
             border-radius: 50%;
             border: 3px solid #b10063;
             box-sizing: border-box;
-            background: url("../image/default_square.png") no-repeat center center;
+            background-image: url("../image/default_square.png");
             background-size:100% 100% ;
+            background-position: center center;
+            background-repeat: no-repeat;
+
         }
         .header .username{
             width: 100%;
@@ -135,7 +138,7 @@
     }
  //获取用户信息
   function fnGetUserInfo(){
-    //从longin_frame缓存中获取用户信息
+    //从longin_frame缓存中获取用户信息+userInfo.userId
     var  userInfo = $api.getStorage('userInfo');
     api.ajax({
         url: 'https://d.apicloud.com/mcm/api/user/'+userInfo.userId,
@@ -143,12 +146,12 @@
         headers: {
           "X-APICloud-AppId": "A6914327011091",
           "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841",
-          "Authorization":userInfo.id
+          "Authorization":userInfo.id  //这个不能少，是登录成功后的一个id不是用户的userId
         },
     },function(ret, err){
         if (ret) {
           //更新网页用户头像的显示
-            console.log( JSON.stringify( ret ) );
+            // console.log( JSON.stringify( ret ) );
           fnUpdateLocalAvatar(ret);
 
         } else {
@@ -158,12 +161,14 @@
   }
    //更新网页用户头像的显示
 function fnUpdateLocalAvatar(data_){
+  //用户头像
   var icon = $('#icon');
   api.imageCache({
-      url: "http://7y0hol.com1.z0.glb.clouddn.com/apicloud/69f4bd69a698b2fe955bd5a43392c38a.png"
-  }, function(ret, err){
+      url: data_.avatar.url
+   }, function(ret, err){
+      // console.log(JSON.stringify(ret.url))
       if( ret ){
-        icon.css("background",ret.url)
+        icon.css("background-image","url('"+ret.url+"')")
       }else{
         api.toast({
             msg: '获取头像失败',
@@ -172,6 +177,8 @@ function fnUpdateLocalAvatar(data_){
         });
       }
   });
+  //用户名
+  $("#username").html(data_.username);
 }
 //从相册中选择头像
 function fnSetAvatar(){
@@ -181,6 +188,7 @@ function fnSetAvatar(){
     cancelTitle: '取消',
     buttons: ['拍照', '相片']
   }, function(ret, err) {
+    console.log(JSON.stringify(ret))
     var index = ret.buttonIndex;
     var sourceType =['camera','album']
     api.getPicture({
@@ -191,7 +199,7 @@ function fnSetAvatar(){
         targetHeight: 100,//压缩后的图片高度
     }, function(ret, err){
         if(ret){
-            //  alert(JSON.stringify(ret.data));//图片路径
+            // console.log(JSON.stringify(ret.data));//图片路径
             fnUploadAvatar(ret.data);
         }else{
              alert(JSON.stringify(err));
@@ -225,26 +233,29 @@ function fnUploadAvatar(avatarUrl_){
   });
 }
 //更改用户头像
-function fnUpdateUserAtavar(avatar){
+function fnUpdateUserAtavar(avatar_){
   //从longin_frame缓存中获取用户信息
   var  userInfo = $api.getStorage('userInfo');
+  // console.log(JSON.stringify(userInfo.userId))
   api.ajax({
       url: 'https://d.apicloud.com/mcm/api/user/'+userInfo.userId,
       method: 'put',
       headers: {
         "X-APICloud-AppId": "A6914327011091",
         "X-APICloud-AppKey": "8ac17d22e49cb7982d82796097cec52a6c7cd01d.1475375422841",
+        "Authorization": userInfo.id
       },
       data: {
           values: {
-            avatar:	avatar
+            avatar:	avatar_
           }
       }
   },function(ret, err){
       if (ret) {
+        // console.log(JSON.stringify(ret))
         fnUpdateLocalAvatar(ret)
       } else {
-          alert( JSON.stringify( err ) );
+        console.log( JSON.stringify( err ) );
       }
   });
 }
