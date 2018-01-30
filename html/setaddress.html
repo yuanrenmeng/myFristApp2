@@ -29,6 +29,7 @@
             text-align: center;
         }
         .remove{
+            display: none;
             position: absolute;
             top: 26px;
             right: 6px;
@@ -37,19 +38,19 @@
 </head>
 <body>
       <div class="login_header">
-          <div class="back"></div>
+          <div class="back" onclick="api.closeWin()"></div>
           <h1>收货地址</h1>
-          <div class="remove">删除</div>
+          <div class="remove" onclick="fnDelete();">删除</div>
       </div>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
     apiready = function(){
-          var login_header = document.querySelector('.login_header');
-          // 实现沉浸式状态栏效果
-          $api.fixStatusBar(login_header);
-          var y = $api.getStorage('headerH');
+      var login_header = document.querySelector('.login_header');
+      // 实现沉浸式状态栏效果
+      $api.fixStatusBar(login_header);
+      var y = $api.getStorage('headerH');
       api.openFrame({
           name: 'setaddress_frame',
           url: './setaddress_frame.html',
@@ -59,12 +60,51 @@
               w: 'auto',
               h: 'auto'
           },
-          pageParam: {
-              name: 'test'
-          },
-          bounces: true,
+          pageParam: api.pageParam, //把address_frame自定义事件传过来点击当条的收获信息发送到setaddress_frame页面
+          bounces: false,
+      });
+  //判断是否由收获地址列表点击进来的
+      if(api.pageParam.id){
+        $(".remove").css('display','block');
+      }
+    };
+
+    function fnDelete(){
+      var userInfo = $api.getStorage('userInfo');
+      api.confirm({
+          title: '提示',
+          msg: '删除收货地址',
+          buttons: ['确定', '取消']
+      }, function(ret, err){
+          if( ret ){
+               if (1 == ret.buttonIndex) {
+                 api.ajax({
+                   //接收address_frame发送过来的参数
+                   url: 'https://d.apicloud.com/mcm/api/address/' + api.pageParam.id,
+                   method:'delete',
+                   headers: {
+                   "X-APICloud-AppId":	"A6921544633372",
+                   "X-APICloud-AppKey":	"2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476",
+                   "Authorization":userInfo.id
+                 },
+                 },function(ret, err){
+                     if (ret) {
+                       //删除后发送自定义事件让address_frame页面接收
+                       api.sendEvent({
+                         name: 'updateAddress'
+                     });
+                     api.closeWin();
+                     } else {
+                         alert( JSON.stringify( err ) );
+                     }
+                 });
+
+               }
+          }else{
+               alert( JSON.stringify( err ) );
+          }
       });
 
-    };
+    }
 </script>
 </html>

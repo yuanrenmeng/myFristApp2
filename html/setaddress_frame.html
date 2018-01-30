@@ -109,26 +109,26 @@
 </head>
 <body>
       <div class="header">
-          <div id="isDefult" class="select select-on"></div>
+          <div id="isDefault" class="select select-on"></div>
           <div class="text">设为默认地址</div>
       </div>
         <section>
         <div class="option">收货人：
-            <input type="text" placeholder="点击输入收货人姓名">
+            <input type="text" placeholder="点击输入收货人姓名" id="name">
         </div>
         <div class="option">手机号码：
-            <input type="text" placeholder="点击输入收货人手机号码">
+            <input type="text" placeholder="点击输入收货人手机号码" id="mobile">
         </div>
-        <div class="option">所在区域：
-            <div class="area">点击收货所在的区域</div>
+        <div class="option" onclick="choiceArea()">所在区域：
+            <div class="area" id="area">点击收货所在的区域</div>
             <div class="icon"></div>
         </div>
-        <div class="option">具体地址：
-            <div class="area">点击选择具体的小区或者写字楼</div>
+        <div class="option" onclick="choiceAddress()">具体地址：
+            <div class="area" id="address">点击选择具体的小区或者写字楼</div>
             <div class="icon"></div>
         </div>
         <div class="option">楼号门牌：
-            <input type="text" placeholder="点击输入门牌号（例A座3单元502）">
+            <input type="text" placeholder="点击输入门牌号（例A座3单元502）" id="house">
         </div>
         <div class="option">地址类型：
             <div class="item_list">
@@ -140,14 +140,209 @@
         </div>
     </section>
     <footer>
-        <div class="btn">保存</div>
+        <div class="btn" onclick="save()">保存</div>
     </footer>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
-    apiready = function(){
+  apiready = function(){
+      init();
 
-    };
+  };
+
+  var name,mobile,area,focus,house;
+  var isDefault = true;//存放是否默认地址 true/false
+  var type = 0;  //存放地址类型  是number
+  function init(){
+    //如果有id说明是通过点击已有的收获地址进来的，不然就是通过添加按钮进来的
+    if(api.pageParam.id){
+      $("#name").val(api.pageParam.name);
+      $("#mobile").val(api.pageParam.mobile);
+      $("#area").html(api.pageParam.region);
+      $("#address").html(api.pageParam.address);
+      $("#house").html(api.pageParam.house);
+      if(api.pageParam.idDefault == true){
+        $("#isDefult").addClass('select-on');
+      }else{
+          $("#isDefult").removeClass('select-on');
+      }
+      $(".item_list div").each(function(index,el){
+        if(api.pageParam.type ==  index){
+             $(this).addClass('item_select').siblings().removeClass('item_select');
+        }
+      })
+
+    }
+    //给是否为默认地址一个标志，是默认地址标识为true
+      $("#isDefault").click(function(){
+        if($(this).hasClass('select-on')){
+          $(this).removeClass('select-on');
+          isDefault = false;
+        }else{
+          $(this).addClass('select-on');
+          isDefault = true;
+        }
+      })
+     //给地址类型赋予标志
+      $(".item_list div").each(function(index,el){
+         $(this).click(function(){
+           $(this).addClass('item_select').siblings().removeClass('item_select');
+           type = index;
+         })
+      })
+
+  }
+
+  function choiceArea(){
+    var UIActionSelector = api.require('UIActionSelector');
+    UIActionSelector.open({
+    datas: 'widget://res/city.json',
+    layout: {
+        row: 5,
+        col: 3,
+        height: 30,
+        size: 12,
+        sizeActive: 14,
+        rowSpacing: 5,
+        colSpacing: 10,
+        maskBg: 'rgba(0,0,0,0.2)',
+        bg: '#fff',
+        color: '#888',
+        colorActive: '#f00',
+        colorSelected: '#f00'
+    },
+    animation: true,
+    cancel: {
+        text: '取消',
+        size: 12,
+        w: 90,
+        h: 35,
+        bg: '#fff',
+        bgActive: '#ccc',
+        color: '#888',
+        colorActive: '#fff'
+    },
+    ok: {
+        text: '确定',
+        size: 12,
+        w: 90,
+        h: 35,
+        bg: '#fff',
+        bgActive: '#ccc',
+        color: '#888',
+        colorActive: '#fff'
+    },
+    title: {
+        text: '请选择',
+        size: 12,
+        h: 44,
+        bg: '#eee',
+        color: '#888'
+    },
+    fixedOn: api.frameName
+   }, function(ret, err) {
+    if (ret) {
+        // alert(JSON.stringify(ret));
+        var areaName = '';
+        for(var i=0;i<ret.selectedInfo.length;i++){
+            areaName+=ret.selectedInfo[i].name;
+        }
+        $("#area").html(areaName)
+    }
+   });
+  }
+
+  function choiceAddress(){
+    api.openWin({
+        name: 'setaddressdetail',
+        url: './setaddressdetail.html',
+        pageParam: {
+            name: 'test'
+        }
+    });
+
+  }
+
+  function save(){
+    name = $("#name").val();
+    mobile = $("#mobile").val();
+    area = $("#area").html();
+    address = $("#address").html();
+    house = $("#house").html();
+    //如果有api.pageParam.id（收获地址信息的id）说明是要修改
+    if(api.pageParam.id){
+      api.ajax({
+          url: 'https://d.apicloud.com/mcm/api/address/' + api.pageParam.id,
+          method: 'put',
+          headers: {
+          "X-APICloud-AppId":	"A6921544633372",
+          "X-APICloud-AppKey":	"2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476",
+          "Authorization":	$api.getStorage('userInfo').id,
+          },
+          data: {
+              values: {
+                  name: name,
+                  mobile:mobile,
+                  region:area,
+                  address:address,
+                  house:house,
+                  type:type,
+                  isDefault:isDefault,
+                  user:$api.getStorage('userInfo').userId
+              },
+          }
+      },function(ret, err){
+          if (ret) {
+              api.sendEvent({
+                  name: 'updateAddress',
+              });
+              api.closeWin();
+          } else {
+              alert( JSON.stringify( err ) );
+          }
+      });
+    }else{
+      api.ajax({
+          url: 'https://d.apicloud.com/mcm/api/address',
+          method: 'post',
+          headers: {
+          "X-APICloud-AppId":	"A6921544633372",
+          "X-APICloud-AppKey":	"2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476",
+          "Authorization":	$api.getStorage('userInfo').id,
+          },
+          data: {
+              values: {
+                  name: name,
+                  mobile:mobile,
+                  region:area,
+                  address:address,
+                  house:house,
+                  type:type,
+                  isDefault:isDefault,
+                  user:$api.getStorage('userInfo').userId
+              },
+          }
+      },function(ret, err){
+          if (ret) {
+              console.log( JSON.stringify( ret ) );
+              api.sendEvent({
+                  name: 'updateAddress',
+              });
+              api.closeWin();
+          } else {
+              alert( JSON.stringify( err ) );
+          }
+      });
+
+    }
+
+
+  }
+  //获取seladdressdetail_frame页面传送过来的详细地址
+  function setAddressDetail(adress_){
+    $("#address").html(adress_)
+  }
+
 </script>
 </html>

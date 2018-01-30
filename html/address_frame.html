@@ -7,41 +7,249 @@
     <title>收获地址列表</title>
     <link rel="stylesheet" type="text/css" href="../css/api.css" />
     <link rel="stylesheet" type="text/css" href="../css/api.css" />
-    <style>
-        html{
-            height: 100%;
-        }
-        body {
-            min-height: 100%;
-            /*background-color: #f0f0f0;*/
-        }
-        .list{
-            width: 100%;
-            height:auto;
-            display: none;
-        }
-        .empty{
-            display: block;
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: #fff;
-            background: url('../image/address_empty.png') no-repeat center center;
-            -webkit-background-size: auto 92px;
-            background-size: auto 92px;
-        }
+  <style>
+    html {
+         height: 100%;
+     }
+
+     body {
+         min-height: 100%;
+         background-color: #f0f0f0;
+     }
+
+     .list {
+         display: block;
+         width: 100%;
+         height: auto;
+     }
+
+     .list .address {
+         position: relative;
+         box-sizing: border-box;
+         width: 100%;
+         height: auto;
+         margin-bottom: 1px;
+         padding: 8px 16px;
+         background-color: #fff;
+     }
+
+     .list .address .icon {
+         position: absolute;
+         top: 21px;
+         left: 16px;
+         width: 19px;
+         height: 24px;
+         background-image: url(../image/icon_address.png);
+         background-repeat: no-repeat;
+         background-size: auto 20px;
+         background-position: center center;
+     }
+
+     .list .address .sign {
+         display: block;;
+         position: absolute;
+         top: 45px;
+         left: 8px;
+         width: 35px;
+         height: 14px;
+         line-height: 14px;
+         font-size: 12px;
+         color: #444;
+         text-align: center;
+     }
+
+     .list .address .sign-1 {
+         display: block;
+     }
+
+     .list .address .info {
+         position: relative;
+         box-sizing: border-box;
+         padding-left: 36px;
+         padding-right: 28px;
+         width: 100%;
+         height: auto;
+     }
+
+     .list .address .info .top {
+         position: relative;
+         box-sizing: border-box;
+         width: 100%;
+         height: 32px;
+         color: #444;
+         line-height: 32px;
+         font-size: 14px;
+     }
+
+     .list .address .info .top .consignee {
+         display: inline;
+         width: auto;
+     }
+
+     .list .address .info .top .mobile {
+         display: inline;
+         width: auto;
+         margin-left: 16px;
+     }
+
+     .list .address .info .bottom {
+         position: relative;
+         width: 100%;
+         min-height: 32px;
+         line-height: 32px;
+         color: #888;
+         font-size: 14px;
+     }
+
+     .list .address .info .bottom .type {
+         display: inline;
+         width: auto;
+         color: #e3007f;
+         font-weight: bolder;
+     }
+
+     .list .address .info .bottom .text {
+         display: inline;
+         width: auto;
+     }
+
+     .list .address .arrow {
+         position: absolute;
+         right: 16px;
+         top: 32px;
+         width: 8px;
+         height: 16px;
+         background-image: url(../image/item_user_address_right.png);
+         background-repeat: no-repeat;
+         background-size: 8px 16px;
+         background-position: right center;
+     }
+
+     .empty {
+         display: none;
+         position: absolute;
+         width: 100%;
+         height: 100%;
+         background-color: #fff;
+         background-image: url(../image/address_empty.png);
+         background-repeat: no-repeat;
+         background-size: auto 93px;
+         background-position: center 50px;
+     }
+
+     .highlight {
+         opacity: 0.7;
+     }
+
     </style>
 </head>
 <body>
-    <section class="list" id="list"></section>
+    <section class="list" id="list">
+        <!-- <div class="address">
+          <div class="icon"></div>
+          <div class="sign">[默认]</div>
+          <div class="info">
+              <div class="top">
+                  <div class="consignee">收货人：李小潞</div>
+                  <div class="mobile">13888888888</div>
+              </div>
+              <div class="bottom">
+                  <div class="type">[家庭]</div>
+                  <div class="text">北京市海淀区</div>
+              </div>
+          </div>
+          <div class="arrow"></div>
+      </div> -->
+    </section>
     <section class="empty" id="empty"></section>
 
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script src="../script/jquery-1.12.3.min.js"></script>
 <script type="text/javascript">
-    apiready = function(){
-
+    apiready =function(){
+        initEventListener();
+        getAddressList();
     };
+
+var type = ['公司','住宅','学校','其他'];
+var data ='';
+function getAddressList(){
+  var userInfo = $api.getStorage('userInfo');
+  api.showProgress({
+        style: 'default',
+        animationType: 'fade',
+        title: '努力加载中...',
+        text: '请稍后...',
+        modal: false
+    });
+  var params = {
+    fields:	{},
+    where:	{
+    user:	userInfo.userId
+    },
+    skip:	0,
+    limit:	10
+  }
+  params = $api.jsonToStr(params);
+  api.ajax({
+      url: 'https://d.apicloud.com/mcm/api/address?filter='+params,
+      method: 'get',
+      headers: {
+      "X-APICloud-AppId":	"A6921544633372",
+      "X-APICloud-AppKey":	"2672b5911d8551540c1ea598e01c87fee217a1e5.1482500122476",
+      "Authorization": userInfo.id
+      },
+  },function(ret, err){
+      if (ret) {
+          // alert( JSON.stringify( ret ) );
+          data = ret; //把结果保存起来给fnOpenSetAddressWin()方法中的openwin的pagaprame使用
+          var view = '';
+          for(var i = 0;i<ret.length;i++){
+            // console.log(JSON.stringify(ret[i]));
+            var a = ret[i].isDefault?"[默认]":"";
+            view += '<div class="address" onclick=fnOpenSetAddressWin("'+i+'")>'+
+                '<div class="icon"></div>'+
+                '<div class="sign">'+a+'</div>'+
+                '<div class="info">'+
+                  '<div class="top">'+
+                        '<div class="consignee">收货人：'+ret[i].name+'</div>'+
+                        '<div class="mobile">手机：'+ret[i].mobile+'</div>'+
+                    '</div>'+
+                    '<div class="bottom">'+
+                        '<div class="type">['+type[ret[i].type]+']</div>'+
+                        '<div class="text">'+ret[i].region+ret[i].address+'</div>'+
+                    '</div>'+
+                '</div>'+
+                '<div class="arrow"></div>'+
+                '</div>'
+          }
+          api.hideProgress();
+          //不能使用append追加，因为每次添加setaddress_frame或放入数据库调用的是updateAddress自定义事件，
+          //如果用append的是当删除的时候即时把要删除的地址删掉，但删掉后原来剩下的地址会再次获取累加在后面
+          $("#list").html(view);
+      } else {
+          // alert( JSON.stringify( err ) );
+      }
+  });
+
+}
+function initEventListener(){
+  api.addEventListener({
+    name: 'updateAddress'
+    }, function(ret, err) {
+        getAddressList();
+    });
+}
+
+//将当前所选的收获地址发送到setaddress中
+function fnOpenSetAddressWin(index_){
+  api.openWin({
+      name: 'setaddress',
+      url: './setaddress.html',
+      pageParam:data[index_]   //将该条收获地址的所有信息(收货人，姓名，电话...)全部发送出去，当有key和value的时候是发送某一条或者某几条
+  });
+
+}
 </script>
 </html>
