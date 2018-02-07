@@ -19,13 +19,13 @@
         height: 100%;
         background-color: #fff;
     }
-    
+
     header {
         width: 100%;
         height: 50px;
         background-color: #e3007f
     }
-    
+
     header .back {
         position: absolute;
         bottom: 0;
@@ -34,14 +34,14 @@
         height: 50px;
         z-index: 2;
     }
-    
+
     header .back img {
         margin-top: 16px;
         margin-left: 12px;
         width: 11px;
         height: 18px;
     }
-    
+
     header .title {
         position: relative;
         width: 100%;
@@ -51,21 +51,21 @@
         font-size: 20px;
         line-height: 50px;
     }
-    
+
     section {
         position: relative;
         -webkit-box-flex: 1;
         -webkit-flex: 1;
         flex: 1;
     }
-    
+
     footer {
         position: relative;
         width: 100%;
         height: 90px;
         text-align: center;
     }
-    
+
     footer .row {
         position: relative;
         height: 30px;
@@ -78,7 +78,7 @@
 
 <body>
     <header id="header">
-        <div class="back">
+        <div class="back" onclick="api.closeWin()">
             <img src="../image/back.png">
         </div>
         <div class="title">
@@ -97,6 +97,25 @@
 <script type="text/javascript" src="../script/api.js"></script>
 <script type="text/javascript">
 apiready = function() {
+  var header = document.querySelector("#header");
+  $api.fixStatusBar(header);
+  var y = $api.getStorage("headerH");
+  api.openFrame({
+      name: 'about_frame',
+      url: './about_frame.html',
+      rect: {
+          x: 0,
+          y: y,
+          w: "auto",
+          h: "auto"
+      },
+      pageParam: {
+          name: 'test'
+      },
+      bounces: true,
+
+  });
+
 };
 </script>
 

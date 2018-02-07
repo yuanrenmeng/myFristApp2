@@ -62,6 +62,10 @@
             padding-left: 46px;
             background: url("../image/icon_user_messages.png") no-repeat;
         }
+        .about{
+            padding-left: 46px;
+            background: url("../image/about.png") no-repeat;
+        }
         .service{
             padding-left: 36px;
             background:url("../image/user_call.png") no-repeat;
@@ -76,16 +80,16 @@
       <section></section>
       <footer id="footer">
           <div class="item">
-              <div class="button setting">设置</div>
+              <div class="button setting" onclick="fnOpenSetting()">设置</div>
           </div>
           <div class="item">
-              <div class="button message">消息</div>
+              <div class="button message" onclick="fnOpenMessage()">消息</div>
           </div>
           <div class="item">
-              <div class="button setting">退货</div>
+              <div class="button about" onclick="fnAbout()">关于</div>
           </div>
           <div class="item">
-              <div class="button service">客服</div>
+              <div class="button service" onclick="fnCustomservice()">客服</div>
           </div>
       </footer>
 </body>
@@ -117,6 +121,44 @@
     };
     function back(){
         api.closeWin();
+    }
+    function fnOpenSetting(){
+      api.openWin({
+          name: 'setting',
+          url: './setting.html',
+          pageParam: {
+              name: 'test'
+          }
+      });
+
+    }
+    function fnOpenMessage(){
+      api.openWin({
+          name: 'message',
+          url: './message.html',
+          pageParam: {
+              name: 'test'
+          }
+      });
+    }
+    function fnCustomservice(){
+      api.openWin({
+          name: 'customservice',
+          url: './customservice.html',
+          pageParam: {
+              name: 'test'
+          }
+      });
+    }
+    function fnAbout(){
+      api.openWin({
+          name: 'about',
+          url: './about.html',
+          pageParam: {
+              name: 'test'
+          }
+      });
+
     }
 </script>
 </html>

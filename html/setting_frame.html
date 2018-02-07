@@ -14,7 +14,7 @@
         height: 61px;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .option .title {
         position: relative;
         width: 100%;
@@ -26,7 +26,7 @@
         color: #444;
         text-align: left;
     }
-    
+
     .option .arrow-panel {
         position: absolute;
         top: 0;
@@ -38,7 +38,7 @@
         background-size: 16px 24px;
         background-position: right center;
     }
-    
+
     .option .arrow-panel .text {
         box-sizing: border-box;
         width: auto;
@@ -49,7 +49,7 @@
         color: #888;
         text-align: left;
     }
-    
+
     .button {
         width: auto;
         height: 50px;
@@ -63,7 +63,7 @@
         text-align: center;
         border-radius: 8px;
     }
-    
+
     .highlight {
         opacity: 0.7;
     }
@@ -73,25 +73,69 @@
 <body>
     <section>
         <div class="option">
-            <div class="title">清除缓存</div>
+            <div class="title" onclick="clearCache()">清除缓存</div>
             <div class="arrow-panel">
                 <div id="cacheSize" class="text"></div>
             </div>
         </div>
         <div class="option">
-            <div class="title">关于</div>
+            <div class="title" onclick="about()">关于</div>
             <div class="arrow-panel">
                 <div class="text"></div>
             </div>
         </div>
-        <div class="button">退出登录</div>
+        <div class="button" onclick="loginOut()">退出登录</div>
     </section>
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script type="text/javascript">
-apiready = function() {
+function loginOut(){
+  var userInfo = $api.getStorage('userInfo');
+      $api.rmStorage('userInfo');
+      if(!userInfo){
+        api.toast({
+            msg: '退出成功',
+            duration: 2000,
+            location: 'middle'
+        });
+        var timer = setTimeout(function(){
+          api.openWin({
+              name: 'main'
+          });
+        },500)
 
-};
+      }
+}
+function about(){
+  api.openWin({
+      name: 'about',
+      url: './about.html',
+  });
+
+}
+function clearCache(){
+  api.getCacheSize(function(ret){
+      var size =ret.size/1048576;//转为为M
+      size = size.toFixed(1);//保留一位小数
+      api.confirm({
+          title: '',
+          msg: '系统缓存大小：'+size+'M，是否清除？',
+          buttons: ['确定', '取消']
+      }, function(ret, err){
+          if( ret && ret.buttonIndex == 1){
+              api.clearCache(function(){
+                  api.toast({
+                      msg:'清除完成'
+                  });
+              });
+          }else{
+               return;
+          }
+      });
+
+  });
+
+}
 </script>
 
 </html>
