@@ -14,7 +14,7 @@
   ## login页面功能：
   1.定义全局变量存放用户名和密码。获取登录页面输入的用户名和密码，通过ajax发送到后台，成功后通过api.setStrorage()保存到本地中，这个发送到ajax的用户名可以是登录页面输入的，也可以是是注册页面传送过来的，</br>
   
-  register页面功能
+  ## register页面功能
   1.获取注册页面输入的用户名和密码，，通过ajax发送到后台，成功后通过api.alert提示，在这个方法的回调中通过api.execScript跨页面方法吧注册的用户名传到登录页面的fnSetUsername（）方法中</br>
   
   personalcenter页面
