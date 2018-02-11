@@ -2,7 +2,7 @@
   所有app所有功能页面分为两个部分，一个部分为页面的头部xxxx，另一个部分为页面的内容xxxx_frame，使用apicloud打开的头部为win，内容页为frame
 # 页面打开逻辑
 
-  main页面功能：
+  ##main页面功能：</br>
   在apicloud里面创建项目，然后使用apicloud Studio登录下载到本地，index打开main（win），main打开main_frame和minicart_frame，基本上
   都是看点击的功能，先打开xxxx，再在xxxx中打开它所属的内容页xxxx_frame
 # 功能实现逻辑
